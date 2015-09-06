@@ -1,0 +1,16 @@
+defaults: &defaults
+  tmpPath: 'tmp'
+  sassCache: 'tmp/.sass-cache'
+  cacheFile: 'tmp/.files.json'
+  pkgBuiltTrackFile: 'tmp/.packages.json'
+  environments:
+    - development
+    - production
+    - staging
+  pkgClassPaths:
+    - "dummy/pkg"
+
+development:
+  <<: *defaults
+
+# defaults: &defaults

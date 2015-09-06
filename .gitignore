@@ -1,0 +1,79 @@
+# Environment normalisation:
+/.bundle/
+/vendor/bundle
+/lib/bundler/man/
+
+# gem files
+*.gem
+
+# naspi files
+naspi.yml
+.naspi.yml
+/config/
+/graspi_build/
+/naspi_build/
+
+# Ignore the default SQLite database.
+db/*.sqlite3
+db/*.sqlite3-journal
+
+# Ignore all logfiles and tempfiles.
+/.config
+/log/*
+/tmp/
+/node_modules/
+/bower_components/
+/coverage/
+/InstalledFiles
+/pkg/
+/spec/reports/
+/test/tmp/
+/test/version_tmp/
+
+# Specific to RubyMotion:
+.dat*
+.repl_history
+build/
+
+# Documentation cache and generated files:
+/.yardoc/
+/_yardoc/
+/doc/
+/rdoc/
+
+# system files
+*.DS_Store
+*.swp
+*.rdb
+*.rbc
+
+# apps / software
+.rvmrc
+.ruby-version
+.ruby-gemset
+.powrc
+.sass-cache/
+.tm_properties
+.idea/
+
+# Ignore all machine specific files for dummy app.
+spec/dummy/db/*.sqlite3
+spec/dummy/db/*.sqlite3-journal
+spec/dummy/log/*.log
+spec/dummy/.rvmrc
+spec/dummy/.ruby-gemset
+spec/dummy/.powrc
+spec/dummy/.sass-cache/
+spec/dummy/.tm_properties
+spec/dummy/.idea/
+spec/dummy/.sass-cache
+spec/dummy/tmp/
+spec/dummy/files/
+spec/dummy/public/system
+spec/dummy/public/medien
+spec/dummy/public/assets
+spec/dummy/config/application.yml
+spec/dummy/config/database.yml
+spec/dummy/config/secrets.yml
+spec/dummy/config/mongoid.yml
+spec/dummy/config/mongoid.yml

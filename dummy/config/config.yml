@@ -1,0 +1,18 @@
+# tmp folder for modules
+tmpPath: 'tmp'
+
+# graspi tasks cache file
+cacheFile: 'tmp/.files.json'
+
+# graspi tasks built track file
+modulesBuiltTrackFile: 'tmp/graspi/.modules-test.json'
+
+# available environments
+environments:
+  - development
+  - staging
+  - production
+
+# production overwrite
+production:
+  modulesBuiltTrackFile: 'tmp/graspi/.modules-production.json'

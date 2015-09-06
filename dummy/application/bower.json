@@ -1,0 +1,19 @@
+{
+  "name": "application",
+  "version": "1.0.0",
+  "private": true,
+  "naspi": {
+    "type": "custom_application"
+  },
+  "main": [],
+  "ignore": [],
+  "dependencies": {
+    "requirejs": ">=2.1.20",
+    "jquery": ">=2.1.4",
+    "bourbon": ">=4.2.4",
+    "neat": ">=1.7.2",
+    "css-social-buttons": "*",
+    "small-lib": "./dummy/small-lib"
+  }
+}
+

@@ -1,0 +1,55 @@
+#!/usr/bin/env node
+
+/*
+ * Implementation copied from https://github.com/gruntjs/grunt-cli
+ * and modified for naspi.
+ *
+ * https://github.com/wonderweblabs/naspi
+ *
+ * Copyright (c) 2015 Sascha Hillig, wonderweblabs, contributors
+ * Licensed under the MIT license.
+ * https://github.com/wonderweblabs/naspi/blob/master/LICENSE
+ *
+ */
+
+'use strict';
+
+process.title = 'naspi';
+
+// Especially badass external libs.
+var findup  = require('findup-sync');
+var resolve = require('resolve').sync;
+var path    = require('path');
+
+// Internal libs.
+var options     = require('../lib/cli/cli').options;
+var completion  = require('../lib/cli/completion');
+var info        = require('../lib/cli/info');
+
+// paths
+var basedir = process.cwd();
+var naspiPath;
+
+// Do stuff based on CLI options.
+if ('completion' in options) {
+  completion.print(options.completion);
+} else if (options.version) {
+  info.version();
+} else if (options.base) {
+  basedir = path.resolve(options.base);
+}
+
+try {
+  naspiPath = resolve('naspi_loader', { basedir: basedir });
+} catch (ex) {
+  naspiPath = findup('lib/naspi_loader.js');
+  // No naspi install found!
+  if (!naspiPath) {
+    if (options.version) { process.exit(); }
+    if (options.help) { info.help(); }
+    info.fatal('Unable to find local naspi.', 99);
+  }
+}
+
+// Everything looks good. Require local naspi and run it.
+require(naspiPath).run();

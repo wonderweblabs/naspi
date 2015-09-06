@@ -1,0 +1,17 @@
+{
+  "name": "application",
+  "version": "1.0.0",
+  "private": true,
+  "naspi": {
+    "type": "simple"
+  },
+  "main": [],
+  "ignore": [],
+  "dependencies": {
+    "jquery": ">=2.1.4",
+    "bourbon": ">=4.2.4",
+    "neat": ">=1.7.2",
+    "underscore": "*",
+    "backbone": "*"
+  }
+}

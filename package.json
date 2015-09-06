@@ -1,0 +1,50 @@
+{
+  "name": "naspi",
+  "version": "0.0.1",
+  "description": "== README",
+  "homepage": "https://github.com/wonderweblabs/naspi",
+  "bugs": "https://github.com/wonderweblabs/naspi/issues",
+  "author": {
+    "name": "Sascha Hillig - wonderweblabs <sascha@wonderweblabs.com>",
+    "url": "https://www.wonderweblabs.com"
+  },
+  "license": "MIT",
+  "engines": {
+    "node": ">=0.12.7"
+  },
+  "bin": {
+    "naspi": "bin/naspi"
+  },
+  "keywords": [
+    "gruntplugin",
+    "assets",
+    "pipeline"
+  ],
+  "files": [
+    "bin",
+    "lib",
+    "package.json"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/wonderweblabs/naspi.git"
+  },
+  "dependencies": {
+    "coffee-script": "~1.9.3",
+    "colors": "^1.1.2",
+    "exit": "~0.1.2",
+    "findup-sync": "~0.2.1",
+    "glob": "~5.0.14",
+    "haml-coffee": "^1.14.1",
+    "iconv-lite": "~0.4.11",
+    "js-yaml": "~3.4.0",
+    "lodash": "~3.10.1",
+    "minimatch": "~2.0.10",
+    "nopt": "~3.0.3",
+    "q": "^1.4.1",
+    "resolve": "~1.1.6",
+    "rimraf": "~2.4.3",
+    "source-map": "^0.4.4"
+  },
+  "devDependencies": {}
+}
