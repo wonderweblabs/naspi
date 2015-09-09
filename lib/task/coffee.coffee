@@ -18,19 +18,21 @@ options:
 ###
 module.exports = class Sass extends Abstract
 
-  onRun: (deferred, options = {}) =>
-    options.options = _.defaults (options.options || {}), @getDefaultOptions()
-    files           = @filesExpanded(options)
-    args            = @prepareArguments(options.options)
+  onRun: (deferred, srcDestMap, options = {}) =>
+    options     = _.defaults options, @getDefaultOptions()
+    srcDestObjs = srcDestMap.resolve()
+    args        = @prepareArguments(options)
 
-    @_ensureFolders(files, options)
+    @_ensureFolders(srcDestObjs, options)
 
-    Q.all(@_execFiles(files, args, options)).done(=> deferred.resolve())
+    Q.all(@_execFiles(srcDestObjs, args, options))
+    .fail((e) => @_failPromise(deferred, e))
+    .done => deferred.resolve()
 
   getDefaultOptions: =>
     bare:       false
     sourcemap:  true
-    noHeader:   false
+    noHeader:   true
 
   prepareArguments: (opts = {}) =>
     args = ["--compile"]
@@ -39,18 +41,19 @@ module.exports = class Sass extends Abstract
     args.push "--no-header" if opts.noHeader == true
     args
 
-  _execFiles: (files, args, options) =>
-    _.map files, (file) =>
+  _execFiles: (srcDestObjs, args, options) =>
+    _.map srcDestObjs, (srcDestObj) =>
       d       = Q.defer()
-      src     = file.src[0]
-      output  = path.dirname(file.dest)
+      src     = srcDestObj.src().pathFromRoot()
+      output  = srcDestObj.dest().dirname()
       a       = args.concat(["--output", output, src])
 
-      @naspi.exec.exec 'coffee', a, {}, => d.resolve()
+      @naspi.exec.exec d, 'coffee', a, {}
 
       d.promise
 
-  _ensureFolders: (files, options) =>
-    _.each files, (file) => @naspi.file.mkdir(path.dirname(file.dest))
+  _ensureFolders: (srcDestObjs, options) =>
+    _.each srcDestObjs, (srcDestObj) =>
+      @naspi.file.mkdir(srcDestObj.dest().dirname())
 
 

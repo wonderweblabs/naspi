@@ -14,9 +14,10 @@ options:
 ###
 module.exports = class Copy extends Abstract
 
-  onRun: (deferred, options = {}) =>
-    files = @filesExpanded(options)
+  onRun: (deferred, srcDestMap, options = {}) =>
+    srcDestObjs = srcDestMap.resolve()
 
-    _.each files, (file) => @naspi.file.copy(file.src[0], file.dest)
+    _.each srcDestObjs, (srcDestObj) =>
+      @naspi.file.copy(srcDestObj.src().pathFromRoot(), srcDestObj.dest().pathFromRoot())
 
     deferred.resolve()

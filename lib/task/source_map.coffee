@@ -21,24 +21,28 @@ options:
 ###
 module.exports = class SourceMap extends Abstract
 
-  onRun: (deferred, options = {}) =>
-    options.options = _.defaults (options.options || {}), @getDefaultOptions()
-    sourceMaps      = []
+  onRun: (deferred, srcDestMap, options = {}) =>
+    options     = _.defaults (options || {}), @getDefaultOptions()
+    srcDestObjs = srcDestMap.resolve()
 
-    # load files
-    files = @filesExpanded
-      files:  options.files
-      dest:   options.destFile
-      cwd:    options.cwd
-      filter: options.filter
+    @_ensureFolders(srcDestObjs, options)
 
-    @_ensureFolders(files, options)
+    destMapping = {}
+    _.each srcDestObjs, (srcDestObj) =>
+      destMapping[srcDestObj.dest().path()] or= []
+      destMapping[srcDestObj.dest().path()].push srcDestObj
 
-    # prepare
+    _.each destMapping, (srcDestObjs, destFile) => @_concat(srcDestObjs, destFile, options)
+
+    deferred.resolve()
+
+  _concat: (srcDestObjs, destFile, options) =>
+    sourceMaps = []
     f       = {}
     f.src   = []
-    f.dest  = options.destFile
-    _.each files, (file) => f.src = f.src.concat(file.src || [])
+    f.dest  = destFile
+    _.each srcDestObjs, (srcDestObj) =>
+      f.src = f.src.concat(srcDestObj.src().pathFromRoot())
 
     # iterate files
     _.each [f], (file) =>
@@ -58,8 +62,8 @@ module.exports = class SourceMap extends Abstract
         relativeFilename  = path.relative(destDir, filename)
         src               = @naspi.file.read(filename)
 
-        if _.isFunction(options.options.process)
-          src = options.options.process(src, filename)
+        if _.isFunction(options.process)
+          src = options.process(src, filename)
 
         if @hasSourcemapLine(src)
           sourceMappingURL = RegExp.$1
@@ -82,8 +86,8 @@ module.exports = class SourceMap extends Abstract
           childNodeChunks.forEach (line, i) =>
             sourceNode.add(new SourceNode(i + 1, 0, relativeFilename, line))
 
-          sourceNode.add(new SourceNode(1, 0, undefined, options.options.separator))
-          sourceNode.setSourceContent(relativeFilename, src) if options.options.sourcesContent
+          sourceNode.add(new SourceNode(1, 0, undefined, options.separator))
+          sourceNode.setSourceContent(relativeFilename, src) if options.sourcesContent
 
       mapfilepath = file.dest.split('/').pop() + '.map'
       if /\.css$/.test(file.dest)
@@ -93,7 +97,7 @@ module.exports = class SourceMap extends Abstract
 
       code_map = sourceNode.toStringWithSourceMap
         file: file.dest
-        sourceRoot: options.options.sourceRoot
+        sourceRoot: options.sourceRoot
 
       # Write the destination file.
       @naspi.file.write(file.dest, code_map.code)
@@ -115,7 +119,6 @@ module.exports = class SourceMap extends Abstract
       # Print a success message.
       @naspi.verbose.writeln "File \"#{file.dest}\" created."
 
-    deferred.resolve()
 
 
   hasSourcemapLine: (src) =>
@@ -129,8 +132,9 @@ module.exports = class SourceMap extends Abstract
     sourcesContent: false
     process: undefined
 
-  _ensureFolders: (files, options) =>
-    @naspi.file.mkdir(path.dirname(options.destFile))
+  _ensureFolders: (srcDestObjs, options) =>
+    _.each srcDestObjs, (srcDestObj) =>
+      @naspi.file.mkdir(srcDestObj.dest().dirname())
 
 
 

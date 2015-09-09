@@ -16,27 +16,28 @@ options:
 ###
 module.exports = class Concat extends Abstract
 
-  onRun: (deferred, options = {}) =>
-    options.options = _.defaults (options.options || {}), @getDefaultOptions()
+  onRun: (deferred, srcDestMap, options = {}) =>
+    options     = _.defaults (options || {}), @getDefaultOptions()
+    srcDestObjs = srcDestMap.resolve()
 
-    # load files
-    opts        = {}
-    opts.cwd    = options.cwd if _.isString(options.cwd) && !_.isEmpty(options.cwd)
-    opts.filter = options.filter if _.isFunction(options.filter)
-    files       = @naspi.file.expand(opts, options.files)
+    destMapping = {}
+    _.each srcDestObjs, (srcDestObj) =>
+      destMapping[srcDestObj.dest().path()] or= []
+      destMapping[srcDestObj.dest().path()].push srcDestObj
 
-    @_ensureFolders(files, options)
+    _.each destMapping, (srcDestObjs, destFile) =>
+      @naspi.file.mkdir(path.dirname(destFile))
 
-    # iterate to final source
-    src = _.map(files, (file) => @naspi.file.read(path.join((options.cwd || ''), file)) ).join('\n')
+      # iterate to final source
+      src = _.map(srcDestObjs, (srcDestObj) =>
+        @naspi.file.read(srcDestObj.src().pathFromRoot()) ).join('\n')
 
-    # Write
-    @naspi.file.write(options.destFile, src)
-    @naspi.verbose.writeln "File \"#{options.destFile}\" created."
+      # Write
+      @naspi.file.write(destFile, src)
+      @naspi.verbose.writeln "File \"#{destFile}\" created."
+
     deferred.resolve()
 
   getDefaultOptions: ->
     {}
 
-  _ensureFolders: (files, options) =>
-    @naspi.file.mkdir(path.dirname(options.destFile))

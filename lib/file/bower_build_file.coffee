@@ -17,7 +17,7 @@ module.exports = class BowerBuildFile
     path.join(@naspi.options.buildPath, 'bower.json')
 
   getJson: ->
-    @json or= @file.readJSON(@getBowerFilePath())
+    @json or= @_readJsonFile()
 
   write: ->
     @file.writeJSON(@getBowerFilePath(), @getJson(), { prettyPrint: true })
@@ -29,3 +29,10 @@ module.exports = class BowerBuildFile
     @getJson().dependencies or= {}
     @getJson().private      = true
 
+  _readJsonFile: ->
+    if @file.exists(@getBowerFilePath())
+      @file.readJSON(@getBowerFilePath())
+    else
+      @file.mkdir @naspi.options.buildPath
+      @file.writeJSON(@getBowerFilePath(), {})
+      {}

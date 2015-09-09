@@ -38,14 +38,16 @@ options:
 ###
 module.exports = class Sass extends Abstract
 
-  onRun: (deferred, options = {}) =>
-    options.options = _.defaults (options.options || {}), @getDefaultOptions()
-    files           = @filesExpanded(options)
-    args            = @prepareArguments(options.options)
+  onRun: (deferred, srcDestMap, options = {}) =>
+    options     = _.defaults (options || {}), @getDefaultOptions()
+    srcDestObjs = srcDestMap.resolve()
+    args        = @prepareArguments(options)
 
-    @_ensureFolders(files, options)
+    @_ensureFolders(srcDestObjs, options)
 
-    Q.all(@_execFiles(files, args, options)).done(=> deferred.resolve())
+    Q.all(@_execFiles(srcDestObjs, args, options))
+    .fail((e) => @_failPromise(deferred, e))
+    .done => deferred.resolve()
 
   getDefaultOptions: =>
     cacheLocation: @naspi.options.sassCache
@@ -59,7 +61,7 @@ module.exports = class Sass extends Abstract
     quiet: true
 
   prepareArguments: (opts = {}) =>
-    args = []
+    args = ["--stop-on-error"]
 
     _.each (opts.loadPaths || []), (loadPath) => @_addArgs(args, "--load-path", "#{loadPath}")
     @_addArgs args, "--cache-location", opts.cacheLocation
@@ -74,19 +76,22 @@ module.exports = class Sass extends Abstract
 
     args
 
-  _execFiles: (files, args, options) =>
-    _.map files, (file) =>
+  _execFiles: (srcDestObjs, args, options) =>
+    _.map srcDestObjs, (srcDestObj) =>
       d     = Q.defer()
-      src   = file.src[0]
-      dest  = file.dest.replace(/\.(sass|scss)$/, '.css')
+      src   = srcDestObj.src().pathFromRoot()
+      dest  = srcDestObj.dest().pathFromRoot()
+      a     = ["exec", "sass"].concat(args)
+      a     = a.concat(["#{src}:#{dest}"])
 
-      @naspi.exec.exec 'sass', args.concat(["#{src}:#{dest}"]), {}, => d.resolve()
+      @naspi.exec.exec d, 'bundle', a, {}
 
       d.promise
 
-  _ensureFolders: (files, options) =>
-    @naspi.file.mkdir(options.options.cacheLocation)
-    _.each files, (file) => @naspi.file.mkdir(path.dirname(file.dest))
+  _ensureFolders: (srcDestObjs, options) =>
+    @naspi.file.mkdir(options.cacheLocation)
+    _.each srcDestObjs, (srcDestObj) =>
+      @naspi.file.mkdir(srcDestObj.dest().dirname())
 
   _addArgs: (args, newArgs...) =>
     _.each (newArgs || []), (arg) => args.push(arg)

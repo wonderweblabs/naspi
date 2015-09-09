@@ -181,7 +181,11 @@ module.exports = class FileChangeTracker
 
   # @nodoc
   _loadMapping: ->
-    @file.readJSON(@getFilePath())
+    try
+      @file.readJSON(@getFilePath()) || {}
+    catch e
+      @naspi.logger.writelnWarn "No file to read: #{@getFilePath()}"
+      {}
 
   # @nodoc
   _writeCache: ->

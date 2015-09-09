@@ -18,24 +18,48 @@ module.exports = class PackageRunner
       msg = "Could not run package \"#{runPkg.pkg}\""
       @naspi.logger.throwError(msg, new Error(msg))
 
-    Q.fcall(pkg.prepare)              # 1. pkg prepare
-    .then(@_writeBowerFile, runPkg)   # 2. write bower.json
-    .then(@_bowerUpdate, runPkg)      # 3. bower update
-    .then(pkg.process)                # 4. pkgs process
-    .then(pkg.postProcess)            # 5. pkgs post process
-    .done()
+    env = { runPkg: runPkg }
+
+    pkg.prepare(env)                # 1. pkg prepare
+    .then(@_writeBowerFile)         # 2. write bower.json
+    .then(@_bowerUpdate)            # 3. bower update
+    .then(pkg.process)              # 4. pkgs process
+    .then(pkg.postProcess)          # 5. pkgs post process
+    .then(@_writeFileChangeTracker) # 6. write files cache
+    .fail (e) => @naspi.logger.throwError(e.message, e)
 
   getPackage: (name) =>
     @naspi.pkgs[name]
 
-  _writeBowerFile: (runPkg) =>
+  _writeBowerFile: (env) =>
     @naspi.file.bowerBuildFile.write()
-    Q()
+    Q.resolve(env)
 
-  _bowerUpdate: (runPkg) =>
+  _bowerUpdate: (env) =>
     deferred = Q.defer()
 
-    @naspi.exec.exec 'bower', ['update'], { cwd: @naspi.options.buildPath }, =>
-      deferred.resolve()
+    bowerFiles = @naspi.file.expand({
+      cwd: @naspi.options.buildPath
+      filter: 'isFile'
+    }, path.join(@naspi.options.buildPath), '**/bower.json')
+
+    changedBowerFiles = false
+
+    _.each bowerFiles, (file) =>
+      return if changedBowerFiles == true
+      changedBowerFiles = @naspi.file.changeTracker.hasChanged(file, "naspi-bower-update")
+
+    if changedBowerFiles == true
+      @naspi.exec.exec deferred, 'bower', ['update'], { cwd: @naspi.options.buildPath }
+      _.each bowerFiles, (file) => @naspi.file.changeTracker.update(file, "naspi-bower-update")
+    else
+      deferred.resolve(env)
 
     deferred.promise
+
+  _writeFileChangeTracker: (env) =>
+    deferred = Q.defer()
+    @naspi.file.changeTracker.persist()
+    deferred.resolve(env)
+    deferred.promise
+

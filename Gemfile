@@ -11,3 +11,4 @@ source 'https://rubygems.org'
 # your gem to rubygems.org.
 
 gem 'sass'
+gem 'haml'

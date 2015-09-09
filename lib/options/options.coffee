@@ -7,6 +7,8 @@ module.exports = class Options
 
   verbose: false
 
+  maxProcesses: 2
+
   defaultTask: 'build'
 
   environment: 'development'
@@ -23,6 +25,8 @@ module.exports = class Options
   tmpPath: 'tmp/naspi'
 
   sassCache: 'tmp/naspi/.sass-cache'
+
+  sassLoadPaths: []
 
   # naspi tasks cache file
   cacheFile: 'tmp/naspi/.files.json'
@@ -93,6 +97,9 @@ module.exports = class Options
         when 'taskClassPaths'
           value = [value] unless _.isArray(value)
           _.each (value || []), (v) => @taskClassPaths.push(path.join(process.cwd(), v))
+        when 'sassLoadPaths'
+          value = [value] unless _.isArray(value)
+          _.each (value || []), (v) => @sassLoadPaths.push(path.join(process.cwd(), v))
         else @[key] = value
 
   # @nodoc

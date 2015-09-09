@@ -2,6 +2,7 @@ _         = require 'lodash'
 path      = require 'path'
 Q         = require 'q'
 Abstract  = require './abstract'
+FileMappingList = require '../file/file_mapping_list'
 
 module.exports = class AbstractBuild extends Abstract
 
@@ -16,13 +17,16 @@ module.exports = class AbstractBuild extends Abstract
     @config   = @data.naspi || {}
 
   onPrepare: (options = {}) =>
-    deferred = Q.defer()
+    chain = @buildRunChain(env)
+    chain.addStep @registerForBuild
+    chain.addStep @copyBowerFile
+    chain.process() # returns promise
 
-    Q.fcall(@registerForBuild)
-    .then(@copyBowerFile)
-    .done => deferred.resolve()
-
-    deferred.promise
+  runTask: (taskName, fileMappingListConfig, options = {}) =>
+    @getTask(taskName).run(
+      new FileMappingList(@naspi, fileMappingListConfig),
+      options
+    )
 
   getTask: (taskName) ->
     try
@@ -30,7 +34,8 @@ module.exports = class AbstractBuild extends Abstract
       new TaskName(@naspi, @)
     catch e
       @naspi.logger.throwError(e.message, e)
-      Q.reject(e.message)
+      TaskName = @getTaskClass('reject')
+      new TaskName(@naspi, @, e)
 
   getTaskClass: (taskName) ->
     requirePath = null
@@ -50,7 +55,7 @@ module.exports = class AbstractBuild extends Abstract
   registerForBuild: =>
     folder = path.join('bower_components', @getName())
     @naspi.file.bowerBuildFile.registerPackage(@getName(), "./#{folder}")
-    Q()
+    Q.resolve()
 
   copyBowerFile: =>
     pkgBowerFile  = path.join('./', @basePath, 'bower.json')
@@ -66,4 +71,4 @@ module.exports = class AbstractBuild extends Abstract
     @naspi.file.mkdir(resultBowerPath)
     @naspi.file.writeJSON(resultBowerFile, bowerData, { prettyPrint: true })
 
-    Q()
+    Q.resolve()

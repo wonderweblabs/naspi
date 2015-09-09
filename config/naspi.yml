@@ -12,5 +12,3 @@ defaults: &defaults
 
 development:
   <<: *defaults
-
-# defaults: &defaults
