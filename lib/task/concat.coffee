@@ -16,21 +16,23 @@ options:
 ###
 module.exports = class Concat extends Abstract
 
-  onRun: (deferred, srcDestMap, options = {}) =>
+  onRun: (deferred, fileMappingList, options = {}) =>
     options     = _.defaults (options || {}), @getDefaultOptions()
-    srcDestObjs = srcDestMap.resolve()
+    fileMappings = fileMappingList.resolve()
+
+    @_ensureFolders(fileMappings, options)
 
     destMapping = {}
-    _.each srcDestObjs, (srcDestObj) =>
-      destMapping[srcDestObj.dest().path()] or= []
-      destMapping[srcDestObj.dest().path()].push srcDestObj
+    _.each fileMappings, (fileMapping) =>
+      destMapping[fileMapping.dest().path()] or= []
+      destMapping[fileMapping.dest().path()].push fileMapping
 
-    _.each destMapping, (srcDestObjs, destFile) =>
+    _.each destMapping, (fileMappings, destFile) =>
       @naspi.file.mkdir(path.dirname(destFile))
 
       # iterate to final source
-      src = _.map(srcDestObjs, (srcDestObj) =>
-        @naspi.file.read(srcDestObj.src().pathFromRoot()) ).join('\n')
+      src = _.map(fileMappings, (fileMapping) =>
+        @naspi.file.read(fileMapping.src().absolutePath()) ).join('\n')
 
       # Write
       @naspi.file.write(destFile, src)
@@ -40,4 +42,8 @@ module.exports = class Concat extends Abstract
 
   getDefaultOptions: ->
     {}
+
+  _ensureFolders: (fileMappings, options) =>
+    _.each fileMappings, (fileMapping) =>
+      @naspi.file.mkdir(fileMapping.dest().absoluteDirname())
 

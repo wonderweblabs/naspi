@@ -52,7 +52,7 @@ module.exports = class BowerPackageReader
 
     @naspi.verbose.write "Pkg \"#{name}\" - create instance ... "
 
-    _.each @naspi.options.pkgClassPaths, (path) =>
+    _.each @naspi.option('pkgClassPaths'), (path) =>
       return unless @naspi.file.isFile(File.join(path, "#{type}.coffee"))
       requirePath = File.join(path, type)
 

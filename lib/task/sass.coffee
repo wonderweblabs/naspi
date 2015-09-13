@@ -38,19 +38,19 @@ options:
 ###
 module.exports = class Sass extends Abstract
 
-  onRun: (deferred, srcDestMap, options = {}) =>
-    options     = _.defaults (options || {}), @getDefaultOptions()
-    srcDestObjs = srcDestMap.resolve()
-    args        = @prepareArguments(options)
+  onRun: (deferred, fileMappingList, options = {}) =>
+    options       = _.defaults (options || {}), @getDefaultOptions()
+    fileMappings  = fileMappingList.resolve()
+    args          = @prepareArguments(options)
 
-    @_ensureFolders(srcDestObjs, options)
+    @_ensureFolders(fileMappings, options)
 
-    Q.all(@_execFiles(srcDestObjs, args, options))
+    Q.all(@_execFiles(fileMappings, args, options))
     .fail((e) => @_failPromise(deferred, e))
     .done => deferred.resolve()
 
   getDefaultOptions: =>
-    cacheLocation: @naspi.options.sassCache
+    cacheLocation: @naspi.option('sassCache')
     style: 'expanded'
     update: true
     sourcemap: 'auto'
@@ -76,11 +76,11 @@ module.exports = class Sass extends Abstract
 
     args
 
-  _execFiles: (srcDestObjs, args, options) =>
-    _.map srcDestObjs, (srcDestObj) =>
+  _execFiles: (fileMappings, args, options) =>
+    _.map fileMappings, (fileMapping) =>
       d     = Q.defer()
-      src   = srcDestObj.src().pathFromRoot()
-      dest  = srcDestObj.dest().pathFromRoot()
+      src   = fileMapping.src().absolutePath()
+      dest  = fileMapping.dest().absolutePath()
       a     = ["exec", "sass"].concat(args)
       a     = a.concat(["#{src}:#{dest}"])
 
@@ -88,10 +88,10 @@ module.exports = class Sass extends Abstract
 
       d.promise
 
-  _ensureFolders: (srcDestObjs, options) =>
+  _ensureFolders: (fileMappings, options) =>
     @naspi.file.mkdir(options.cacheLocation)
-    _.each srcDestObjs, (srcDestObj) =>
-      @naspi.file.mkdir(srcDestObj.dest().dirname())
+    _.each fileMappings, (fileMapping) =>
+      @naspi.file.mkdir(fileMapping.dest().absoluteDirname())
 
   _addArgs: (args, newArgs...) =>
     _.each (newArgs || []), (arg) => args.push(arg)

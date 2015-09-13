@@ -22,37 +22,37 @@ module.exports = class PkgCustomApplication extends AbstractBuild
     chain.process() # returns promise
 
   runTaskCopyImages: (env) =>
-    @runTask 'copy', @_taskCopyFilesImagesConfig()
+    @runTask env, 'copy', @_taskCopyFilesImagesConfig()
 
   runTaskSassCompile: (env) =>
-    @runTask 'sass', @_taskSassCompileConfig(),
+    @runTask env, 'sass', @_taskSassCompileConfig(),
       loadPaths: [
         path.join(@basePath, 'stylesheets'),
         path.join(@basePath, '../application-external'),
-        path.join(@naspi.options.buildPath, 'bower_components', 'bourbon/app/assets/stylesheets')
+        path.join(@naspi.option('buildPath'), 'bower_components', 'bourbon/app/assets/stylesheets')
       ]
       sourcemap: 'none'
 
   runTaskCoffee: (env) =>
-    @runTask 'coffee', @_taskCoffeeConfig()
+    @runTask env, 'coffee', @_taskCoffeeConfig()
 
   runTaskHaml: (env) =>
-    @runTask 'haml', @_taskHamlConfig(),
+    @runTask env, 'haml', @_taskHamlConfig(),
       render: true
       hyphenateDataAttrs: true
 
   runPostTaskCopy: (env) =>
-    @runTask 'copy', @_taskPostCopyImgConfig()
-    @runTask 'copy', @_taskPostCopyCSBConfig()
+    @runTask env, 'copy', @_taskPostCopyImgConfig()
+    @runTask env, 'copy', @_taskPostCopyCSBConfig()
 
   runPostTaskConcatJs: (env) =>
-    @runTask 'source_map', @_taskPostConcatJsConfig()
+    @runTask env, 'source_map', @_taskPostConcatJsConfig()
 
   runPostTaskConcatCss: (env) =>
-    @runTask 'concat', @_taskPostConcatCssConfig()
+    @runTask env, 'concat', @_taskPostConcatCssConfig()
 
   runPostTaskConcatTemplates: (env) =>
-    @runTask 'concat', @_taskPostConcatTplConfig()
+    @runTask env, 'concat', @_taskPostConcatTplConfig()
 
 
   # ----------------------------------------------------------
@@ -63,7 +63,7 @@ module.exports = class PkgCustomApplication extends AbstractBuild
     expand: true
     src:   'images/**/*'
     cwd:    @basePath
-    dest:   path.join(@naspi.options.buildPath, 'bower_components', @getName())
+    dest:   path.join(@naspi.option('buildPath'), 'bower_components', @getName())
     eachFilter: @_taskCopyImagesEachFilter
 
   # @nodoc
@@ -71,7 +71,7 @@ module.exports = class PkgCustomApplication extends AbstractBuild
     expand: true
     src:  'stylesheets/application.sass'
     cwd:  @basePath
-    dest: path.join(@naspi.options.buildPath, 'bower_components', @getName())
+    dest: path.join(@naspi.option('buildPath'), 'bower_components', @getName())
     ext:  'css'
     eachFilter: @_taskSassCompileEachFilter
 
@@ -80,7 +80,7 @@ module.exports = class PkgCustomApplication extends AbstractBuild
     expand: true
     src:  '**/*.coffee'
     cwd:  path.join(@basePath, 'javascripts')
-    dest: path.join(@naspi.options.buildPath, 'bower_components', @getName(), 'javascripts')
+    dest: path.join(@naspi.option('buildPath'), 'bower_components', @getName(), 'javascripts')
     ext:  'js'
     eachFilter: @_taskCoffeeEachFilter
 
@@ -89,7 +89,7 @@ module.exports = class PkgCustomApplication extends AbstractBuild
     expand: true
     src:  '**/*.haml'
     cwd:  path.join(@basePath, 'templates')
-    dest: path.join(@naspi.options.buildPath, 'bower_components', @getName(), 'templates')
+    dest: path.join(@naspi.option('buildPath'), 'bower_components', @getName(), 'templates')
     ext:  'html'
     eachFilter: @_taskHamlEachFilter
 
@@ -97,7 +97,7 @@ module.exports = class PkgCustomApplication extends AbstractBuild
   _taskPostCopyImgConfig: =>
     expand: true
     src:  '**/*'
-    cwd:  path.join(@naspi.options.buildPath, 'bower_components', @getName(), 'images')
+    cwd:  path.join(@naspi.option('buildPath'), 'bower_components', @getName(), 'images')
     dest: path.join('tmp', 'dummy', 'application')
     eachFilter: @_taskPostCopyImgEachFilter
 
@@ -105,20 +105,20 @@ module.exports = class PkgCustomApplication extends AbstractBuild
   _taskPostCopyCSBConfig: =>
     expand: true
     src:  '**/*'
-    cwd:  path.join(@naspi.options.buildPath, 'bower_components', 'css-social-buttons', 'css')
+    cwd:  path.join(@naspi.option('buildPath'), 'bower_components', 'css-social-buttons', 'css')
     dest: path.join('tmp', 'dummy', 'application')
     eachFilter: @_taskPostCopyCSBEachFilter
 
   # @nodoc
   _taskPostConcatJsConfig: =>
-      src: [
-        'requirejs/require.js',
-        'jquery/dist/jquery.js',
-        'application/javascripts/**/*.js'
-      ]
-      cwd:  path.join(@naspi.options.buildPath, 'bower_components')
-      dest: path.join('tmp', 'dummy', 'application', 'application.js')
-      eachFilter: @_taskPostConcatJsEachFilter
+    src: [
+      'requirejs/require.js',
+      'jquery/dist/jquery.js',
+      'application/javascripts/**/*.js'
+    ]
+    cwd:  path.join(@naspi.option('buildPath'), 'bower_components')
+    dest: path.join('tmp', 'dummy', 'application', 'application.js')
+    eachFilter: @_taskPostConcatJsEachFilter
 
   # @nodoc
   _taskPostConcatCssConfig: =>
@@ -126,7 +126,7 @@ module.exports = class PkgCustomApplication extends AbstractBuild
       'css-social-buttons/css/zocial.css',
       'application/stylesheets/application.css'
     ]
-    cwd:  path.join(@naspi.options.buildPath, 'bower_components')
+    cwd:  path.join(@naspi.option('buildPath'), 'bower_components')
     dest: path.join('tmp', 'dummy', 'application', 'application.css')
     eachFilter: @_taskPostConcatCssEachFilter
 
@@ -135,7 +135,7 @@ module.exports = class PkgCustomApplication extends AbstractBuild
     src: [
       'application/templates/**/*.html'
     ]
-    cwd:  path.join(@naspi.options.buildPath, 'bower_components')
+    cwd:  path.join(@naspi.option('buildPath'), 'bower_components')
     dest: path.join('tmp', 'dummy', 'application', 'templates.html')
     eachFilter: @_taskPostConcatTplEachFilter
 

@@ -14,10 +14,16 @@ options:
 ###
 module.exports = class Copy extends Abstract
 
-  onRun: (deferred, srcDestMap, options = {}) =>
-    srcDestObjs = srcDestMap.resolve()
+  onRun: (deferred, fileMappingList, options = {}) =>
+    fileMappings = fileMappingList.resolve()
 
-    _.each srcDestObjs, (srcDestObj) =>
-      @naspi.file.copy(srcDestObj.src().pathFromRoot(), srcDestObj.dest().pathFromRoot())
+    @_ensureFolders(fileMappings, options)
+
+    _.each fileMappings, (fileMapping) =>
+      @naspi.file.copy(fileMapping.src().absolutePath(), fileMapping.dest().absolutePath())
 
     deferred.resolve()
+
+  _ensureFolders: (fileMappings, options) =>
+    _.each fileMappings, (fileMapping) =>
+      @naspi.file.mkdir(fileMapping.dest().absoluteDirname())

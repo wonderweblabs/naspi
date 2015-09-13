@@ -18,14 +18,14 @@ options:
 ###
 module.exports = class Sass extends Abstract
 
-  onRun: (deferred, srcDestMap, options = {}) =>
-    options     = _.defaults options, @getDefaultOptions()
-    srcDestObjs = srcDestMap.resolve()
-    args        = @prepareArguments(options)
+  onRun: (deferred, fileMappingList, options = {}) =>
+    options       = _.defaults options, @getDefaultOptions()
+    fileMappings  = fileMappingList.resolve()
+    args          = @prepareArguments(options)
 
-    @_ensureFolders(srcDestObjs, options)
+    @_ensureFolders(fileMappings, options)
 
-    Q.all(@_execFiles(srcDestObjs, args, options))
+    Q.all(@_execFiles(fileMappings, args, options))
     .fail((e) => @_failPromise(deferred, e))
     .done => deferred.resolve()
 
@@ -41,19 +41,47 @@ module.exports = class Sass extends Abstract
     args.push "--no-header" if opts.noHeader == true
     args
 
-  _execFiles: (srcDestObjs, args, options) =>
-    _.map srcDestObjs, (srcDestObj) =>
-      d       = Q.defer()
-      src     = srcDestObj.src().pathFromRoot()
-      output  = srcDestObj.dest().dirname()
-      a       = args.concat(["--output", output, src])
 
-      @naspi.exec.exec d, 'coffee', a, {}
+  # ----------------------------------------------------------
+  # private - filter
 
-      d.promise
+  # @nodoc
+  _ensureFolders: (fileMappings, options) =>
+    _.each fileMappings, (fileMapping) =>
+      @naspi.file.mkdir(fileMapping.dest().getAbsoluteDirname())
 
-  _ensureFolders: (srcDestObjs, options) =>
-    _.each srcDestObjs, (srcDestObj) =>
-      @naspi.file.mkdir(srcDestObj.dest().dirname())
+  # @nodoc
+  _execFiles: (fileMappings, args, options) =>
+    _.map fileMappings, (fileMapping) =>
+      deferred = Q.defer()
 
+      @_execFile(fileMapping, args, options)
+      .then (fileContent) => @_moveFile(fileMapping, args, options, fileContent)
+      .fail((e) => @_failPromise(deferred, e))
+      .done => deferred.resolve()
 
+      deferred.promise
+
+  # @nodoc
+  _execFile: (fileMapping, args, options) =>
+    deferred  = Q.defer()
+    src       = fileMapping.src().absolutePath()
+    a         = args.concat([src])
+
+    @naspi.exec.exec(deferred, 'coffee', a, { pipeOutput: true })
+
+    deferred.promise
+
+  # @nodoc
+  _moveFile: (fileMapping, args, options, fileContent) =>
+    compiled  = fileMapping.src().absolutePath()
+    compiled  = compiled.replace(/\.coffee$/, '.js')
+    output    = fileMapping.dest().absolutePath()
+
+    if @naspi.file.exists(compiled)
+      @naspi.file.copy compiled, output
+      @naspi.file.delete compiled, { force: true }
+
+    if @naspi.file.exists("#{compiled}.map")
+      @naspi.file.copy "#{compiled}.map", "#{output}.map"
+      @naspi.file.delete "#{compiled}.map", { force: true }

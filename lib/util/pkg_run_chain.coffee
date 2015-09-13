@@ -22,13 +22,11 @@ module.exports = class PkgRunChain
     @steps.push func
 
   process: =>
-    deferred = Q.defer()
-    deferred.promise.fail (error) => @failCb(@deferred, @env, error)
-    deferred.promise.done => @doneCb(@deferred, @env)
+    chain = Q(@env)
+    _.each @steps, (stepFunc) => chain = chain.then stepFunc if _.isFunction(stepFunc)
+    chain.fail (error) => @failCb(@deferred, @env, error)
+    chain.done => @doneCb(@deferred, @env)
 
-    _.each @steps, (stepFunc) => deferred.promise.then(stepFunc)
-
-    deferred.resolve(@env)
     @promise()
 
   done: (func) =>
@@ -39,7 +37,7 @@ module.exports = class PkgRunChain
 
 
   # ----------------------------------------------------------
-  # private - files
+  # private
 
   # @nodoc
   _failCb: (deferred, env, error) =>

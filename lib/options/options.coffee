@@ -3,57 +3,84 @@ path  = require 'path'
 
 module.exports = class Options
 
-  debug: false
-
-  verbose: false
-
-  maxProcesses: 2
-
-  defaultTask: 'build'
-
   environment: 'development'
 
   environments: ['development', 'production']
 
-  configFile: './config/naspi.yml'
-
-  userConfigFile: './.naspi.yml'
-
   runPkgs: []
 
-  # tmp folder for modules
-  tmpPath: 'tmp/naspi'
+  # --------------------------------------------------
+  # conf keys
 
-  sassCache: 'tmp/naspi/.sass-cache'
+  options:
+    defaults:
 
-  sassLoadPaths: []
+      debug: false
 
-  # naspi tasks cache file
-  cacheFile: 'tmp/naspi/.files.json'
+      verbose: false
 
-  # naspi tasks built track file
-  pkgBuiltTrackFile: 'tmp/naspi/.packages.json'
+      maxProcesses: 2
 
-  # naspi creates a custom bower folder to bundle all packages
-  buildPath: 'naspi_build'
+      defaultTask: 'build'
 
-  pkgClassPaths: [path.join(__dirname, '..', 'pkg')]
+      configFile: './config/naspi.yml'
 
-  taskClassPaths: [path.join(__dirname, '..', 'task')]
+      userConfigFile: './.naspi.yml'
+
+      # tmp folder for modules
+      tmpPath: 'tmp/naspi'
+
+      sassCache: 'tmp/naspi/.sass-cache'
+
+      sassLoadPaths: []
+
+      # naspi tasks cache file
+      cacheFile: 'tmp/naspi/.files.json'
+
+      # naspi tasks built track file
+      pkgBuiltTrackFile: 'tmp/naspi/.packages.json'
+
+      filerevFile: 'tmp/naspi/.filerev.json'
+
+      manifestSrcCwd: 'naspi_build'
+      manifestDestCwd: 'naspi_build'
+
+      manifestFile: 'tmp/naspi/.manifest.json'
+
+      # naspi creates a custom bower folder to bundle all packages
+      buildPath: 'naspi_build'
+
+      assetHost: null
+
+      pkgClassPaths: [path.join(__dirname, '..', 'pkg')]
+
+      taskClassPaths: [path.join(__dirname, '..', 'task')]
+
+  # conf keys
+  # --------------------------------------------------
 
 
   constructor: (@naspi) ->
     @_parseProcessArguments()
 
   load: =>
-    @runPkgs        = []
-    @pkgClassPaths  = [path.join(__dirname, '..', 'pkg')]
-    @taskClassPaths = [path.join(__dirname, '..', 'task')]
+    @runPkgs = []
+    @options.defaults.pkgClassPaths  = [path.join(__dirname, '..', 'pkg')]
+    @options.defaults.taskClassPaths = [path.join(__dirname, '..', 'task')]
+    @options[@environment]           = _.cloneDeep(@options.defaults)
 
     @_parseConfigFile()
     @_parseUserConfigFile()
     @_parseProcessArguments()
+    @_mergeConfigs()
     @_normalizeRunPkgs()
+
+  option: (key, env = @environment) =>
+    switch key
+      when 'runPkgs' then @runPkgs
+      when 'environment' then @environment
+      when 'environments' then @environments
+      else _.result(@options[env], key)
 
   # ----------------------------------------------------------
   # private
@@ -66,7 +93,8 @@ module.exports = class Options
   _parseProcessArgument: (argument) =>
     if /^\-\-/.test(argument)
       opt = argument.replace(/^\-\-/, '').split('=')
-      @[opt[0]] = if _.size(opt) > 1 then opt[1] else true
+      @options[@environment] or= {}
+      @options[@environment][opt[0]] = if _.size(opt) > 1 then opt[1] else true
     else
       opt       = argument.split(':')
       opts      = { pkg: opt[0] }
@@ -77,30 +105,80 @@ module.exports = class Options
 
   # @nodoc
   _parseConfigFile: =>
-    return unless @naspi.file.exists(@configFile)
+    return unless @naspi.file.exists(@option('configFile'))
 
-    @_mergeConfigData((@naspi.file.readYAML(@configFile) || {})[@environment])
+    @_parseYaml(@option('configFile'))
 
   # @nodoc
   _parseUserConfigFile: =>
-    return unless @naspi.file.exists(@userConfigFile)
+    return unless @naspi.file.exists(@option('userConfigFile'))
 
-    @_mergeConfigData((@naspi.file.readYAML(@userConfigFile) || {})[@environment])
+    @_parseYaml(@option('userConfigFile'))
 
   # @nodoc
-  _mergeConfigData: (data) =>
+  _parseYaml: (file) =>
+    yaml = @naspi.file.readYAML(@option('configFile')) || {}
+
+    _.each yaml, (env, env_name) =>
+      @options[env_name] or= {}
+      @_mergeConfigData(env_name, env)
+
+  # @nodoc
+  _mergeConfigData: (env_name, data) =>
     _.each data, (value, key) =>
       switch key
         when 'pkgClassPaths'
           value = [value] unless _.isArray(value)
-          _.each (value || []), (v) => @pkgClassPaths.push(path.join(process.cwd(), v))
+          _.each (value || []), (v) =>
+            @options[env_name].pkgClassPaths or= []
+            @options[env_name].pkgClassPaths.push(path.join(process.cwd(), v))
         when 'taskClassPaths'
           value = [value] unless _.isArray(value)
-          _.each (value || []), (v) => @taskClassPaths.push(path.join(process.cwd(), v))
+          _.each (value || []), (v) =>
+            @options[env_name].taskClassPaths or= []
+            @options[env_name].taskClassPaths.push(path.join(process.cwd(), v))
         when 'sassLoadPaths'
           value = [value] unless _.isArray(value)
-          _.each (value || []), (v) => @sassLoadPaths.push(path.join(process.cwd(), v))
-        else @[key] = value
+          _.each (value || []), (v) =>
+            @options[env_name].sassLoadPaths or= []
+            @options[env_name].sassLoadPaths.push(path.join(process.cwd(), v))
+        else
+          @options[env_name][key] = value
+
+  # @nodoc
+  _mergeConfigs: =>
+    @environments = Object.keys(@options)
+
+    options = {}
+
+    _.each @environments, (env_name) =>
+      return if env_name == 'defaults'
+      options[env_name] = _.cloneDeep @options.defaults
+
+    _.each @environments, (env_name) =>
+      return if env_name == 'defaults'
+
+      _.each @options[env_name], (value, key) =>
+        switch key
+          when 'pkgClassPaths'
+            value = [value] unless _.isArray(value)
+            _.each (value || []), (v) =>
+              options[env_name].pkgClassPaths or= []
+              options[env_name].pkgClassPaths.push(v)
+          when 'taskClassPaths'
+            value = [value] unless _.isArray(value)
+            _.each (value || []), (v) =>
+              options[env_name].taskClassPaths or= []
+              options[env_name].taskClassPaths.push(v)
+          when 'sassLoadPaths'
+            value = [value] unless _.isArray(value)
+            _.each (value || []), (v) =>
+              options[env_name].sassLoadPaths or= []
+              options[env_name].sassLoadPaths.push(v)
+          else
+            options[env_name][key] = value
+
+    @options = options
 
   # @nodoc
   _normalizeRunPkgs: ->
@@ -111,22 +189,17 @@ module.exports = class Options
 
       oriEnv  = runPkg.env
       oriTask = runPkg.task
-      env     = null
-      task    = null
+      env     = runPkg.env
+      task    = runPkg.task
 
-      if _.contains(@environments, runPkg.task) && !_.contains(@environments, runPkg.env)
-        env = runPkg.task
-      else if _.contains(@environments, runPkg.env)
-        env = runPkg.env
+      if !_.contains(@option('environments'), env) && _.contains(@option('environments'), task)
+        env = task
 
-      if !_.contains(@environments, runPkg.task) && _.contains(@environments, runPkg.env)
-        task = runPkg.env
-      else if !_.contains(@environments, runPkg.task)
-        task = runPkg.task
+      if _.contains(@option('environments'), task)
+        task = if _.contains(@option('environments'), runPkg.env) then @option('defaultTask') else runPkg.env
 
       runPkg.env  = env || @environment
-      runPkg.task = task || @defaultTask
-
+      runPkg.task = task || @option('defaultTask')
 
 
 

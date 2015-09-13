@@ -7,6 +7,6 @@ module.exports = class Sass extends Abstract
 
   constructor: (@naspi, @pkg, @error) ->
 
-  onRun: (deferred, srcDestMap, options = {}) =>
+  onRun: (deferred, fileMappingList, options = {}) =>
     deferred.reject(@error)
     deferred.promise

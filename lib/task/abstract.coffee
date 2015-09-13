@@ -5,14 +5,21 @@ module.exports = class Abstract
 
   constructor: (@naspi, @pkg) ->
 
-  run: (srcDestMap, options = {}) =>
+  run: (env, fileMappingList, options = {}) =>
     deferred = Q.defer()
 
-    @onRun(deferred, srcDestMap, options)
+    @_run(fileMappingList, options, env)
+    .fail (e) => deferred.reject(e)
+    .done => deferred.resolve(env)
 
     deferred.promise
 
-  onRun: (deferred, options = {}) =>
+  _run: (fileMappingList, options, env) =>
+    deferred = Q.defer()
+    @onRun(deferred, fileMappingList, options, env)
+    deferred.promise
+
+  onRun: (deferred, options, env) =>
     @naspi.logger.throwError("Task - onRun method not implemented.", null)
 
   _failPromise: (deferred, error) =>

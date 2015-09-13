@@ -10,6 +10,10 @@ module.exports = class PackageRunner
   constructor: (@naspi) ->
 
   exec: (deferred, cmd, args, options) =>
+    pipeOutput = options.pipeOutput == true
+
+    delete options['pipeOutput']
+
     @execQueue.push
       uid: _.uniqueId('naspi-exec-')
       deferred: deferred
@@ -17,11 +21,14 @@ module.exports = class PackageRunner
       args: args
       options: options
       done: false
+      pipeOutput: pipeOutput
+      output: null
+
     @_execNext()
 
   _execNext: =>
     return unless _.any(@execQueue)
-    return unless _.size(@currentExecs) < @naspi.options.maxProcesses
+    return unless _.size(@currentExecs) < @naspi.option('maxProcesses')
 
     exec = @execQueue.shift()
     @currentExecs.push exec
@@ -36,11 +43,12 @@ module.exports = class PackageRunner
 
     @naspi.verbose.write "Exec - "
     @naspi.verbose.writeInfo "#{exec.cmd} #{exec.args.join(' ')}\n"
+    @naspi.verbose.writeln '> Pipe output ...' if exec.pipeOutput
 
     try
       cmdProcess = child_process.spawn(exec.cmd, exec.args, exec.options)
-      cmdProcess.stdout.on 'data', (data) => @naspi.verbose.write(data.toString())
-      cmdProcess.stderr.on 'data', (data) => @naspi.logger.writeError(data.toString())
+      cmdProcess.stdout.on 'data', (data) => @onExecStdoutData(data, exec)
+      cmdProcess.stderr.on 'data', (data) => @onExecStderrData(data, exec)
       cmdProcess.on 'error', (err) => @onExecError(err, exec)
       cmdProcess.on 'exit', (code) => @onExecExit(code, exec)
     catch e
@@ -51,7 +59,11 @@ module.exports = class PackageRunner
       @naspi.verbose.write('\n')
 
   onExecStdoutData: (data, exec) =>
-    @naspi.verbose.write(data.toString())
+    if exec.pipeOutput
+      exec.output = '' unless _.isString(exec.output)
+      exec.output += data.toString()
+    else
+      @naspi.verbose.write(data.toString())
 
   onExecStderrData: (data, exec) =>
     @naspi.logger.writelnError(data.toString())
@@ -68,7 +80,7 @@ module.exports = class PackageRunner
     @currentExecs = _.without(@currentExecs, exec)
 
     if code == 0
-      exec.deferred.resolve()
+      exec.deferred.resolve(exec.output)
       @_execNext()
     else
       @naspi.exit(code)

@@ -37,7 +37,7 @@ module.exports = class FileChangeTracker
 
   #
   getFilePath: ->
-    @naspi.options.cacheFile
+    @naspi.option('cacheFile')
 
   #
   persist: ->
@@ -80,7 +80,7 @@ module.exports = class FileChangeTracker
   #
   update: (file, scope = @_defaultScope) ->
     return @updateMultiple(file, scope) if _.isArray(file)
-    return unless _.isString(file) && file.length > 0
+    return unless _.isString(file) && _.size(file) > 0
     return unless @file.isFile(file)
 
     @getMapping(scope)[file] = @getFileData(file)

@@ -1,5 +1,6 @@
 _     = require './util/lodash_extensions'
 exit  = require 'exit'
+Q     = require 'q'
 
 #
 # Main naspi module. All scripts start from here.
@@ -17,7 +18,7 @@ module.exports = new (class Naspi
     @options  = new (require('./options/options'))(@)
     @logger   = new (require('./logger/default'))(@)
     @verbose  = new (require('./logger/verbose'))(@)
-    @file     = new (require('./file/file'))(@)
+    @file     = new (require('./file/file_util'))(@)
     @exec     = new (require('./util/exec'))(@)
 
     @options.load()
@@ -31,8 +32,8 @@ module.exports = new (class Naspi
     @pkgReader.resolve()
     @pkgRunner.run()
 
-  option: (key) =>
-    @options[key]
+  option: (key, env = null) =>
+    @options.option(key, env)
 
   exit: (code) =>
     exit(code)

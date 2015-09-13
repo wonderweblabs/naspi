@@ -14,23 +14,23 @@ module.exports = class Simple extends AbstractBuild
     chain.process() # returns promise
 
   runTaskCopy: (env) =>
-    @runTask 'copy', @_taskCopyFilesConfig()
+    @runTask env, 'copy', @_taskCopyFilesConfig()
 
   runTaskSass: (env) =>
-    @runTask 'sass', @_taskSassFilesConfig(),
-      loadPaths: (@naspi.options.sassLoadPaths || [])
+    @runTask env, 'sass', @_taskSassFilesConfig(),
+      loadPaths: (@naspi.option('sassLoadPaths') || [])
       sourcemap: 'none'
 
   runTaskCoffee: (env) =>
-    @runTask 'coffee', @_taskCoffeeFilesConfig()
+    @runTask env, 'coffee', @_taskCoffeeFilesConfig()
 
   runTaskHaml: (env) =>
-    @runTask 'haml', @_taskHamlFilesConfig(),
+    @runTask env, 'haml', @_taskHamlFilesConfig(),
       render: true
       hyphenateDataAttrs: true
 
   getDestPath: =>
-    path.join(@naspi.options.buildPath, 'bower_components', @getName())
+    path.join(@naspi.option('buildPath'), 'bower_components', @getName())
 
 
   # ----------------------------------------------------------

@@ -16,14 +16,15 @@ module.exports = class AbstractBuild extends Abstract
     @basePath = @version
     @config   = @data.naspi || {}
 
-  onPrepare: (options = {}) =>
+  onPrepare: (env) =>
     chain = @buildRunChain(env)
     chain.addStep @registerForBuild
     chain.addStep @copyBowerFile
     chain.process() # returns promise
 
-  runTask: (taskName, fileMappingListConfig, options = {}) =>
+  runTask: (env, taskName, fileMappingListConfig, options = {}) =>
     @getTask(taskName).run(
+      env,
       new FileMappingList(@naspi, fileMappingListConfig),
       options
     )
@@ -40,7 +41,7 @@ module.exports = class AbstractBuild extends Abstract
   getTaskClass: (taskName) ->
     requirePath = null
 
-    _.each @naspi.options.taskClassPaths, (file) =>
+    _.each @naspi.option('taskClassPaths'), (file) =>
       return unless @naspi.file.isFile(path.join(file, "#{taskName}.coffee"))
       requirePath = path.join(file, taskName)
 
@@ -66,7 +67,7 @@ module.exports = class AbstractBuild extends Abstract
       newVersion = path.join('bower_components', name)
       bowerData.dependencies[name] = "./#{newVersion}"
 
-    resultBowerPath = path.join('./', @naspi.options.buildPath, 'bower_components', @getName())
+    resultBowerPath = path.join('./', @naspi.option('buildPath'), 'bower_components', @getName())
     resultBowerFile = path.join('./', resultBowerPath, 'bower.json')
     @naspi.file.mkdir(resultBowerPath)
     @naspi.file.writeJSON(resultBowerFile, bowerData, { prettyPrint: true })

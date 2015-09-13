@@ -42,14 +42,14 @@ options:
 ###
 module.exports = class Haml extends Abstract
 
-  onRun: (deferred, srcDestMap, options = {}) =>
-    options     = _.defaults (options || {}), @getDefaultOptions()
-    srcDestObjs = srcDestMap.resolve()
-    args        = @prepareArguments(options)
+  onRun: (deferred, fileMappingList, options = {}) =>
+    options       = _.defaults (options || {}), @getDefaultOptions()
+    fileMappings  = fileMappingList.resolve()
+    args          = @prepareArguments(options)
 
-    @_ensureFolders(srcDestObjs, options)
+    @_ensureFolders(fileMappings, options)
 
-    Q.all(@_execFiles(srcDestObjs, args, options))
+    Q.all(@_execFiles(fileMappings, args, options))
     .fail((e) => @_failPromise(deferred, e))
     .done => deferred.resolve()
 
@@ -87,11 +87,11 @@ module.exports = class Haml extends Abstract
 
     args
 
-  _execFiles: (srcDestObjs, args, options) =>
-    _.map srcDestObjs, (srcDestObj) =>
+  _execFiles: (fileMappings, args, options) =>
+    _.map fileMappings, (fileMapping) =>
       d       = Q.defer()
-      src     = srcDestObj.src().pathFromRoot()
-      output  = srcDestObj.dest().pathFromRoot()
+      src     = fileMapping.src().absolutePath()
+      output  = fileMapping.dest().absolutePath()
       a       = ['exec', 'haml'].concat(args)
       a       = a.concat([src, output])
 
@@ -99,9 +99,9 @@ module.exports = class Haml extends Abstract
 
       d.promise
 
-  _ensureFolders: (srcDestObjs, options) =>
-    _.each srcDestObjs, (srcDestObj) =>
-      @naspi.file.mkdir(srcDestObj.dest().dirname())
+  _ensureFolders: (fileMappings, options) =>
+    _.each fileMappings, (fileMapping) =>
+      @naspi.file.mkdir(fileMapping.dest().absoluteDirname())
 
   _addArgs: (args, newArgs...) =>
     _.each (newArgs || []), (arg) => args.push(arg)

@@ -3,10 +3,10 @@ defaults: &defaults
   sassCache: 'tmp/.sass-cache'
   cacheFile: 'tmp/.files.json'
   pkgBuiltTrackFile: 'tmp/.packages.json'
-  environments:
-    - development
-    - production
-    - staging
+  filerevFile: 'tmp/.filerev.json'
+  manifestFile: 'tmp/.manifest.json'
+  manifestSrcCwd: 'tmp/dummy'
+  manifestDestCwd: 'tmp/dummy'
   pkgClassPaths:
     - "dummy/pkg"
 

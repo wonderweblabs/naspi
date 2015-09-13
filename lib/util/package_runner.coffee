@@ -9,7 +9,7 @@ module.exports = class PackageRunner
   run: =>
     @naspi.file.bowerBuildFile.prepare()
 
-    _.each @naspi.options.runPkgs, (runPkg) => @runPkg(runPkg)
+    _.each @naspi.option('runPkgs'), (runPkg) => @runPkg(runPkg)
 
   runPkg: (runPkg) =>
     pkg = @getPackage(runPkg.pkg)
@@ -33,25 +33,29 @@ module.exports = class PackageRunner
 
   _writeBowerFile: (env) =>
     @naspi.file.bowerBuildFile.write()
-    Q.resolve(env)
+    Q(env)
 
   _bowerUpdate: (env) =>
     deferred = Q.defer()
 
     bowerFiles = @naspi.file.expand({
-      cwd: @naspi.options.buildPath
+      cwd: @naspi.option('buildPath')
       filter: 'isFile'
-    }, path.join(@naspi.options.buildPath), '**/bower.json')
+    }, path.join(@naspi.option('buildPath')), '**/bower.json')
 
     changedBowerFiles = false
 
     _.each bowerFiles, (file) =>
-      return if changedBowerFiles == true
-      changedBowerFiles = @naspi.file.changeTracker.hasChanged(file, "naspi-bower-update")
+      file = path.join(@naspi.option('buildPath'), file)
+      if @naspi.file.changeTracker.hasChanged(file, "naspi-bower-update")
+        changedBowerFiles = true
+        @naspi.file.delete path.join(path.dirname(file), '.bower.json'), { force: true }
 
     if changedBowerFiles == true
-      @naspi.exec.exec deferred, 'bower', ['update'], { cwd: @naspi.options.buildPath }
-      _.each bowerFiles, (file) => @naspi.file.changeTracker.update(file, "naspi-bower-update")
+      @naspi.exec.exec deferred, 'bower', ['update'], { cwd: @naspi.option('buildPath') }
+      _.each bowerFiles, (file) =>
+        file = path.join(@naspi.option('buildPath'), file)
+        @naspi.file.changeTracker.update(file, "naspi-bower-update")
     else
       deferred.resolve(env)
 

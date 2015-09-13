@@ -1,6 +1,6 @@
 _         = require 'lodash'
 path      = require 'path'
-url       = require('url')
+url       = require 'url'
 Q         = require 'q'
 Abstract  = require './abstract'
 
@@ -21,28 +21,28 @@ options:
 ###
 module.exports = class SourceMap extends Abstract
 
-  onRun: (deferred, srcDestMap, options = {}) =>
-    options     = _.defaults (options || {}), @getDefaultOptions()
-    srcDestObjs = srcDestMap.resolve()
+  onRun: (deferred, fileMappingList, options = {}) =>
+    options       = _.defaults (options || {}), @getDefaultOptions()
+    fileMappings  = fileMappingList.resolve()
 
-    @_ensureFolders(srcDestObjs, options)
+    @_ensureFolders(fileMappings, options)
 
     destMapping = {}
-    _.each srcDestObjs, (srcDestObj) =>
-      destMapping[srcDestObj.dest().path()] or= []
-      destMapping[srcDestObj.dest().path()].push srcDestObj
+    _.each fileMappings, (fileMapping) =>
+      destMapping[fileMapping.dest().path()] or= []
+      destMapping[fileMapping.dest().path()].push fileMapping
 
-    _.each destMapping, (srcDestObjs, destFile) => @_concat(srcDestObjs, destFile, options)
+    _.each destMapping, (fileMappings, destFile) => @_concat(fileMappings, destFile, options)
 
     deferred.resolve()
 
-  _concat: (srcDestObjs, destFile, options) =>
+  _concat: (fileMappings, destFile, options) =>
     sourceMaps = []
     f       = {}
     f.src   = []
     f.dest  = destFile
-    _.each srcDestObjs, (srcDestObj) =>
-      f.src = f.src.concat(srcDestObj.src().pathFromRoot())
+    _.each fileMappings, (fileMapping) =>
+      f.src = f.src.concat(fileMapping.src().absolutePath())
 
     # iterate files
     _.each [f], (file) =>
@@ -132,9 +132,9 @@ module.exports = class SourceMap extends Abstract
     sourcesContent: false
     process: undefined
 
-  _ensureFolders: (srcDestObjs, options) =>
-    _.each srcDestObjs, (srcDestObj) =>
-      @naspi.file.mkdir(srcDestObj.dest().dirname())
+  _ensureFolders: (fileMappings, options) =>
+    _.each fileMappings, (fileMapping) =>
+      @naspi.file.mkdir(fileMapping.dest().absoluteDirname())
 
 
 
