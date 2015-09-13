@@ -126,6 +126,9 @@ module.exports = class PkgAbstract
   getDependencyPackages: =>
     []
 
+  getWatchConfigs: =>
+    []
+
   prepareDependencies: (env) =>
     chain = @buildRunChain(env)
     _.map @getDependencyPackages(), (pkg) =>

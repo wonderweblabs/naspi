@@ -19,6 +19,8 @@ module.exports = class Options
 
       verbose: false
 
+      watch: false
+
       maxProcesses: 2
 
       defaultTask: 'build'

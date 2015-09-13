@@ -12,6 +12,8 @@ module.exports = new (class Naspi
   file:           null
   exec:           null
   options:        null
+  pkgRunner:      null
+  pkgWatcher:     null
   pkgs:           {}
 
   run: =>
@@ -30,7 +32,12 @@ module.exports = new (class Naspi
     @pkgRunner  = new (require('./util/package_runner'))(@)
 
     @pkgReader.resolve()
-    @pkgRunner.run()
+
+    if @options.option('watch') == true
+      @pkgWatcher = new (require('./util/package_watcher'))(@)
+      @pkgWatcher.watch()
+    else
+      @pkgRunner.run()
 
   option: (key, env = null) =>
     @options.option(key, env)
