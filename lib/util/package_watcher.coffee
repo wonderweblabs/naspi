@@ -14,8 +14,9 @@ module.exports = class PackageRunner
   watch: =>
     _.each @naspi.option('runPkgs'), (runPkg) =>
       pkg = @getRunner().getPackage(runPkg.pkg)
+      pkg.setEnv({ runPkg: runPkg })
 
-      _.each pkg.getWatchConfigs(runPkg), (watchConfig) =>
+      _.each pkg.getWatchConfigs(), (watchConfig) =>
         @watchConfig runPkg, watchConfig
 
   watchConfig: (runPkg, watchConfig) =>
