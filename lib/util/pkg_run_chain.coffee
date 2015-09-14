@@ -30,10 +30,10 @@ module.exports = class PkgRunChain
     @promise()
 
   done: (func) =>
-    @failCb = func
+    @doneCb = func
 
   fail: (func) =>
-    @doneCb = func
+    @failCb = func
 
 
   # ----------------------------------------------------------

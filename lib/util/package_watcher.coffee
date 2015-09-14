@@ -3,6 +3,7 @@ path      = require 'path'
 Q         = require 'q'
 gaze      = require 'gaze'
 Gaze      = gaze.Gaze
+PkgRunChain = require './pkg_run_chain'
 
 module.exports = class PackageRunner
 
@@ -36,7 +37,14 @@ module.exports = class PackageRunner
 
   _onWatcherChange: (filepath, runPkgs) =>
     @_resetPkgs()
-    _.each runPkgs, (runPkg) => @getRunner().runPkg(runPkg)
+
+    chain = new PkgRunChain(@naspi)
+    _.each runPkgs, (runPkg) =>
+      chain.addStep => @getRunner().runPkg(runPkg)
+    chain.fail (deferred, e) =>
+      deferred.reject(e)
+      @naspi.logger.throwError(e.message, e)
+    chain.process()
 
   _resetPkgs: =>
     _.each @naspi.pkgs, (pkg) =>

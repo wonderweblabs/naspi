@@ -26,7 +26,6 @@ module.exports = class Vulcanize extends Abstract
     options       = _.defaults (options || {}), @getDefaultOptions()
     fileMappings  = fileMappingList.resolve()
     args          = @prepareArguments(options)
-    console.log 'VULCANIZE', _.map fileMappings, (fileMapping) => fileMapping.src().path()
 
     @_ensureFolders(fileMappings, options)
 

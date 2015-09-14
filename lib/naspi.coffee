@@ -11,6 +11,7 @@ module.exports = new (class Naspi
   verbose:        null
   file:           null
   exec:           null
+  notifier:       null
   options:        null
   pkgRunner:      null
   pkgWatcher:     null
@@ -22,6 +23,7 @@ module.exports = new (class Naspi
     @verbose  = new (require('./logger/verbose'))(@)
     @file     = new (require('./file/file_util'))(@)
     @exec     = new (require('./util/exec'))(@)
+    @notifier = new (require('./notifier/notifier'))(@)
 
     @options.load()
     @file.load()

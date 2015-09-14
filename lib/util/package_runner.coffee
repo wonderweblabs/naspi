@@ -1,7 +1,7 @@
 _         = require 'lodash'
 path      = require 'path'
 Q         = require 'q'
-notifier  = require 'node-notifier'
+PkgRunChain = require './pkg_run_chain'
 
 module.exports = class PackageRunner
 
@@ -10,7 +10,13 @@ module.exports = class PackageRunner
   run: =>
     @naspi.file.bowerBuildFile.prepare()
 
-    _.each @naspi.option('runPkgs'), (runPkg) => @runPkg(runPkg)
+    chain = new PkgRunChain(@naspi)
+    _.each @naspi.option('runPkgs'), (runPkg) =>
+      chain.addStep => @runPkg(runPkg)
+    chain.fail (deferred, e) =>
+      deferred.reject(e)
+      @naspi.logger.throwError(e.message, e)
+    chain.process()
 
   runPkg: (runPkg) =>
     pkg = @getPackage(runPkg.pkg)
@@ -19,6 +25,7 @@ module.exports = class PackageRunner
       msg = "Could not run package \"#{runPkg.pkg}\""
       @naspi.logger.throwError(msg, new Error(msg))
 
+    deferred = Q.defer()
     env = { runPkg: runPkg }
 
     pkg.setEnv(env)
@@ -30,6 +37,9 @@ module.exports = class PackageRunner
     .then(@_writeFileChangeTracker) # 6. write files cache
     .then(=> @notifyChanges(env))   # 7. notification
     .fail (e) => @naspi.logger.throwError(e.message, e)
+    .done => deferred.resolve()
+
+    deferred.promise
 
   getPackage: (name) =>
     @naspi.pkgs[name]
@@ -72,9 +82,38 @@ module.exports = class PackageRunner
 
   notifyChanges: (env) =>
     runPkg = env.runPkg
-    notifier.notify
-      title:    'naspi processed'
-      message:  [runPkg.pkg, runPkg.task, runPkg.env].join(':')
-      wait: false
+
+    # options =
+    #   title: 'naspi processed'
+    #   message: [runPkg.pkg, runPkg.task, runPkg.env].join(':')
+    #   duration: 1
+
+    @naspi.notifier.notify
+      title: 'naspi processed'
+      message: [runPkg.pkg, runPkg.task, runPkg.env].join(':')
+
+    # nf = new NotificationCenter()
+    # nf.notify
+    #   title:    'naspi processed'
+    #   message:  [runPkg.pkg, runPkg.task, runPkg.env].join(':')
+    #   group:    'naspi'
+    #   wait: false
+    # setTimeout =>
+    #   console.log 'REMOVE'
+    #   nf.notify { remove: 'naspi' }
+    # , 1000
+
+    # notifier.notify
+    #   title:    'naspi processed'
+    #   message:  [runPkg.pkg, runPkg.task, runPkg.env].join(':')
+    #   group:    'naspi'
+    #   wait: false
+
+    # setTimeout =>
+    #   console.log 'REMOVE'
+    #   notifier.notify { remove: 'naspi' }
+    # , 1000
+
+
     env
 
