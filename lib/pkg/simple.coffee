@@ -22,7 +22,8 @@ module.exports = class Simple extends AbstractBuild
       sourcemap: 'none'
 
   runTaskCoffee: =>
-    @runTask 'coffee', @_taskCoffeeFilesConfig()
+    @runTask 'coffee', @_taskCoffeeFilesConfig(),
+      sourcemap: false
 
   runTaskHaml: =>
     @runTask 'haml', @_taskHamlFilesConfig(),
