@@ -21,6 +21,8 @@ module.exports = class Options
 
       watch: false
 
+      notify: false
+
       maxProcesses: 2
 
       defaultTask: 'build'

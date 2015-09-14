@@ -16,15 +16,15 @@ module.exports = class AbstractBuild extends Abstract
     @basePath = @version
     @config   = @data.naspi || {}
 
-  onPrepare: (env) =>
-    chain = @buildRunChain(env)
+  onPrepare: =>
+    chain = @buildRunChain()
     chain.addStep @registerForBuild
     chain.addStep @copyBowerFile
     chain.process() # returns promise
 
-  runTask: (env, taskName, fileMappingListConfig, options = {}) =>
+  runTask: (taskName, fileMappingListConfig, options = {}) =>
     @getTask(taskName).run(
-      env,
+      @env,
       new FileMappingList(@naspi, fileMappingListConfig),
       options
     )

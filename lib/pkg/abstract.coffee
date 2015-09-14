@@ -1,6 +1,6 @@
 _           = require 'lodash'
 Q           = require 'q'
-PkgRunChain = require('../util/pkg_run_chain')
+PkgRunChain = require '../util/pkg_run_chain'
 
 module.exports = class PkgAbstract
 
@@ -16,106 +16,113 @@ module.exports = class PkgAbstract
   postProcessing:       false
   postProcessDeferred:  null
 
+  env: null
+
   constructor: (@naspi, @name, @version) ->
 
-  buildRunChain: (env, deferred) =>
-    new PkgRunChain(@naspi, env, deferred)
+  buildRunChain: (deferred) =>
+    new PkgRunChain(@naspi, deferred)
 
-  prepare: (env) =>
+  setEnv: (env) => @env = env
+
+  prepare: =>
     if @prepared == true
       @naspi.verbose.writeln "Pkg \"#{@getName()}\" - already prepared"
-      return Q(env) # already resolved promise
+      return Q.resolve() # already resolved promise
 
     if @preparing == true
       @naspi.verbose.writeln "Pkg \"#{@getName()}\" - already preparing"
-      return @prepareDeferred.promise
+      # return @prepareDeferred.promise
+      return Q.resolve() # already resolved promise
 
     @naspi.verbose.writeln "Pkg \"#{@getName()}\" - prepare ... start"
     @preparing        = true
     @prepareDeferred  or= Q.defer()
 
-    chain = @buildRunChain(env, @prepareDeferred)
+    chain = @buildRunChain(@prepareDeferred)
     chain.addStep @prepareDependencies
     chain.addStep @onBeforePrepare
     chain.addStep @onPrepare
     chain.addStep @onAfterPrepare
-    chain.done (deferred, env) =>
+    chain.done (deferred) =>
       @naspi.verbose.write "Pkg \"#{@getName()}\" - prepare ... "
       @naspi.verbose.writeOk "ok\n"
       @prepared = true
-      deferred.resolve(env)
+      deferred.resolve()
     chain.process() # returns promise
 
-  process: (env) =>
+  process: =>
     if @processed == true
       @naspi.verbose.writeln "Pkg \"#{@getName()}\" - already processed"
-      return Q(env) # already resolved promise
+      return Q.resolve() # already resolved promise
 
     if @processing == true
       @naspi.verbose.writeln "Pkg \"#{@getName()}\" - already processing"
-      return @processDeferred.promise
+      # return @processDeferred.promise
+      return Q.resolve() # already resolved promise
 
     @naspi.verbose.writeln "Pkg \"#{@getName()}\" - process ... start"
     @processing       = true
     @processDeferred  or= Q.defer()
 
-    chain = @buildRunChain(env, @processDeferred)
+    chain = @buildRunChain(@processDeferred)
     chain.addStep @processDependencies
     chain.addStep @onBeforeProcess
     chain.addStep @onProcess
     chain.addStep @onAfterProcess
-    chain.done (deferred, env) =>
+    chain.done (deferred) =>
       @naspi.verbose.write "Pkg \"#{@getName()}\" - process ... "
       @naspi.verbose.writeOk "ok\n"
       @processed = true
-      deferred.resolve(env)
+      deferred.resolve()
     chain.process() # returns promise
 
-  postProcess: (env) =>
+  postProcess: =>
     if @postProcessed == true
       @naspi.verbose.writeln "Pkg \"#{@getName()}\" - already post processed"
-      return Q(env) # already resolved promise
+      return Q.resolve() # already resolved promise
 
     if @postProcessing == true
       @naspi.verbose.writeln "Pkg \"#{@getName()}\" - already post processing"
-      return @postProcessDeferred.promise
+      # return @postProcessDeferred.promise
+      return Q.resolve() # already resolved promise
 
     @naspi.verbose.writeln "Pkg \"#{@getName()}\" - post process ... start"
     @postProcessing       = true
     @postProcessDeferred  or= Q.defer()
 
-    chain = @buildRunChain(env, @postProcessDeferred)
+    chain = @buildRunChain(@postProcessDeferred)
     chain.addStep @postProcessDependencies
     chain.addStep @onBeforePostProcess
     chain.addStep @onPostProcess
     chain.addStep @onAfterPostProcess
     chain.addStep @updateBuildInfo
-    chain.done (deferred, env) =>
+    chain.done (deferred) =>
       @naspi.verbose.write "Pkg \"#{@getName()}\" - post process ... "
       @naspi.verbose.writeOk "ok\n"
       @postProcessed = true
-      deferred.resolve(env)
+      deferred.resolve()
     chain.process() # returns promise
 
-  onBeforePrepare:      (env) => Q(env) # already resolved promise
+  onBeforePrepare:      => Q.resolve() # already resolved promise
 
-  onPrepare:            (env) => Q(env) # already resolved promise
+  onPrepare:            => Q.resolve() # already resolved promise
 
-  onAfterPrepare:       (env) => Q(env) # already resolved promise
+  onAfterPrepare:       => Q.resolve() # already resolved promise
 
-  onBeforeProcess:      (env) => Q(env) # already resolved promise
+  onBeforeProcess:      => Q.resolve() # already resolved promise
 
-  onProcess: (env) =>
+  onProcess: =>
     @naspi.verbose.writelnWarn "Pkg \"#{@name}\" - nothing to process"
-    Q(env) # already resolved promise
+    Q.resolve() # already resolved promise
 
-  onAfterProcess:       (env) => Q(env) # already resolved promise
+  onAfterProcess:       => Q.resolve() # already resolved promise
 
-  onBeforePostProcess:  (env) => Q(env) # already resolved promise
+  onBeforePostProcess:  => Q.resolve() # already resolved promise
 
-  onPostProcess:        (env) => Q(env) # already resolved promise
+  onPostProcess:        => Q.resolve() # already resolved promise
 
-  onAfterPostProcess:   (env) => Q(env) # already resolved promise
+  onAfterPostProcess:   => Q.resolve() # already resolved promise
 
   getName: =>
     @name
@@ -129,32 +136,36 @@ module.exports = class PkgAbstract
   getWatchConfigs: =>
     []
 
-  prepareDependencies: (env) =>
-    chain = @buildRunChain(env)
+  prepareDependencies: =>
+    chain = @buildRunChain()
     _.map @getDependencyPackages(), (pkg) =>
       return if !_.contains(Object.keys(@naspi.pkgs), pkg.getName())
+      pkg.setEnv @env
       chain.addStep pkg.prepare
-    chain.done (deferred, env) => deferred.resolve(env)
+    chain.done (deferred) => deferred.resolve()
     chain.process() # returns promise
 
-  processDependencies: (env) =>
-    chain = @buildRunChain(env)
+  processDependencies: =>
+    chain = @buildRunChain()
     _.map @getDependencyPackages(), (pkg) =>
       return if !_.contains(Object.keys(@naspi.pkgs), pkg.getName())
+      pkg.setEnv @env
       chain.addStep pkg.process
-    chain.done (deferred, env) => deferred.resolve(env)
+    chain.done (deferred) => deferred.resolve()
     chain.process() # returns promise
 
-  postProcessDependencies: (env) =>
-    chain = @buildRunChain(env)
+  postProcessDependencies: =>
+    chain = @buildRunChain()
     _.map @getDependencyPackages(), (pkg) =>
       return if !_.contains(Object.keys(@naspi.pkgs), pkg.getName())
+      pkg.setEnv @env
       chain.addStep pkg.postProcess
-    chain.done (deferred, env) => deferred.resolve(env)
+    chain.done (deferred) => deferred.resolve()
     chain.process() # returns promise
 
   updateBuildInfo: =>
     # todo
+    Q.resolve()
 
   _failPromise: (deferred, error) =>
     deferred.reject(error)

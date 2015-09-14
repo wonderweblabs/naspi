@@ -5,27 +5,27 @@ AbstractBuild = require './abstract_build'
 
 module.exports = class Simple extends AbstractBuild
 
-  onProcess: (env) =>
-    chain = @buildRunChain(env)
+  onProcess: =>
+    chain = @buildRunChain()
     chain.addStep @runTaskCopy
     chain.addStep @runTaskSass
     chain.addStep @runTaskCoffee
     chain.addStep @runTaskHaml
     chain.process() # returns promise
 
-  runTaskCopy: (env) =>
-    @runTask env, 'copy', @_taskCopyFilesConfig()
+  runTaskCopy: =>
+    @runTask 'copy', @_taskCopyFilesConfig()
 
-  runTaskSass: (env) =>
-    @runTask env, 'sass', @_taskSassFilesConfig(),
+  runTaskSass: =>
+    @runTask 'sass', @_taskSassFilesConfig(),
       loadPaths: (@naspi.option('sassLoadPaths') || [])
       sourcemap: 'none'
 
-  runTaskCoffee: (env) =>
-    @runTask env, 'coffee', @_taskCoffeeFilesConfig()
+  runTaskCoffee: =>
+    @runTask 'coffee', @_taskCoffeeFilesConfig()
 
-  runTaskHaml: (env) =>
-    @runTask env, 'haml', @_taskHamlFilesConfig(),
+  runTaskHaml: =>
+    @runTask 'haml', @_taskHamlFilesConfig(),
       render: true
       hyphenateDataAttrs: true
 

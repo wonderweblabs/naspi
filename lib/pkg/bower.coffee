@@ -3,14 +3,14 @@ Abstract  = require './abstract'
 
 module.exports = class Bower extends Abstract
 
-  prepare: (env) =>
+  prepare: =>
     @prepared = true
-    Q(env) # already resolved promise
+    Q.resolve() # already resolved promise
 
-  process: (env) =>
+  process: =>
     @processed = true
-    Q(env) # already resolved promise
+    Q.resolve() # already resolved promise
 
-  postProcess: (env) =>
+  postProcess: =>
     @postProcessed = true
-    Q(env) # already resolved promise
+    Q.resolve() # already resolved promise

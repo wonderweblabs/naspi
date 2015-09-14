@@ -9,7 +9,7 @@ module.exports = class PkgRunChain
   failCb: null
   doneCb: null
 
-  constructor: (@naspi, @env, deferred = null) ->
+  constructor: (@naspi, deferred = null) ->
     @deferred = deferred || Q.defer()
     @steps    = []
     @failCb   = @_failCb
@@ -22,10 +22,10 @@ module.exports = class PkgRunChain
     @steps.push func
 
   process: =>
-    chain = Q(@env)
+    chain = Q()
     _.each @steps, (stepFunc) => chain = chain.then stepFunc if _.isFunction(stepFunc)
-    chain.fail (error) => @failCb(@deferred, @env, error)
-    chain.done => @doneCb(@deferred, @env)
+    chain.fail (error) => @failCb(@deferred, error)
+    chain.done => @doneCb(@deferred)
 
     @promise()
 
@@ -40,10 +40,10 @@ module.exports = class PkgRunChain
   # private
 
   # @nodoc
-  _failCb: (deferred, env, error) =>
+  _failCb: (deferred, error) =>
     deferred.reject(error)
     @naspi.logger.throwError(error.message, error)
 
   # @nodoc
-  _doneCb: (deferred, env) =>
-    deferred.resolve(env)
+  _doneCb: (deferred) =>
+    deferred.resolve()

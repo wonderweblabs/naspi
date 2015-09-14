@@ -31,8 +31,8 @@
   },
   "dependencies": {
     "coffee-script": "~1.9.3",
-    "convert-source-map": "~1.1.1",
     "colors": "^1.1.2",
+    "convert-source-map": "~1.1.1",
     "exit": "~0.1.2",
     "findup-sync": "~0.2.1",
     "gaze": "~0.5.1",
@@ -41,6 +41,7 @@
     "js-yaml": "~3.4.0",
     "lodash": "~3.10.1",
     "minimatch": "~2.0.10",
+    "node-notifier": "^4.2.3",
     "nopt": "~3.0.3",
     "q": "^1.4.1",
     "resolve": "~1.1.6",

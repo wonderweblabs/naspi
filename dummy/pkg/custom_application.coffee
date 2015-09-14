@@ -5,27 +5,27 @@ AbstractBuild = require '../../lib/pkg/abstract_build'
 
 module.exports = class PkgCustomApplication extends AbstractBuild
 
-  onProcess: (env) =>
-    chain = @buildRunChain(env)
+  onProcess: =>
+    chain = @buildRunChain()
     chain.addStep @runTaskCopyImages
     chain.addStep @runTaskSassCompile
     chain.addStep @runTaskCoffee
     chain.addStep @runTaskHaml
     chain.process() # returns promise
 
-  onPostProcess: (env) =>
-    chain = @buildRunChain(env)
+  onPostProcess: =>
+    chain = @buildRunChain()
     chain.addStep @runPostTaskCopy
     chain.addStep @runPostTaskConcatJs
     chain.addStep @runPostTaskConcatCss
     chain.addStep @runPostTaskConcatTemplates
     chain.process() # returns promise
 
-  runTaskCopyImages: (env) =>
-    @runTask env, 'copy', @_taskCopyFilesImagesConfig()
+  runTaskCopyImages: =>
+    @runTask 'copy', @_taskCopyFilesImagesConfig()
 
-  runTaskSassCompile: (env) =>
-    @runTask env, 'sass', @_taskSassCompileConfig(),
+  runTaskSassCompile: =>
+    @runTask 'sass', @_taskSassCompileConfig(),
       loadPaths: [
         path.join(@basePath, 'stylesheets'),
         path.join(@basePath, '../application-external'),
@@ -33,26 +33,26 @@ module.exports = class PkgCustomApplication extends AbstractBuild
       ]
       sourcemap: 'none'
 
-  runTaskCoffee: (env) =>
-    @runTask env, 'coffee', @_taskCoffeeConfig()
+  runTaskCoffee: =>
+    @runTask 'coffee', @_taskCoffeeConfig()
 
-  runTaskHaml: (env) =>
-    @runTask env, 'haml', @_taskHamlConfig(),
+  runTaskHaml: =>
+    @runTask 'haml', @_taskHamlConfig(),
       render: true
       hyphenateDataAttrs: true
 
-  runPostTaskCopy: (env) =>
-    @runTask env, 'copy', @_taskPostCopyImgConfig()
-    @runTask env, 'copy', @_taskPostCopyCSBConfig()
+  runPostTaskCopy: =>
+    @runTask 'copy', @_taskPostCopyImgConfig()
+    @runTask 'copy', @_taskPostCopyCSBConfig()
 
-  runPostTaskConcatJs: (env) =>
-    @runTask env, 'source_map', @_taskPostConcatJsConfig()
+  runPostTaskConcatJs: =>
+    @runTask 'source_map', @_taskPostConcatJsConfig()
 
-  runPostTaskConcatCss: (env) =>
-    @runTask env, 'concat', @_taskPostConcatCssConfig()
+  runPostTaskConcatCss: =>
+    @runTask 'concat', @_taskPostConcatCssConfig()
 
-  runPostTaskConcatTemplates: (env) =>
-    @runTask env, 'concat', @_taskPostConcatTplConfig()
+  runPostTaskConcatTemplates: =>
+    @runTask 'concat', @_taskPostConcatTplConfig()
 
 
   # ----------------------------------------------------------
