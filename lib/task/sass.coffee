@@ -77,16 +77,57 @@ module.exports = class Sass extends Abstract
     args
 
   _execFiles: (fileMappings, args, options) =>
+    sass = require 'node-sass'
+
+    loadPaths = options.loadPaths || []
+
     _.map fileMappings, (fileMapping) =>
       d     = Q.defer()
       src   = fileMapping.src().absolutePath()
       dest  = fileMapping.dest().absolutePath()
-      a     = ["exec", "sass"].concat(args)
-      a     = a.concat(["#{src}:#{dest}"])
 
-      @naspi.exec.exec d, 'bundle', a, {}
+      sass.render({
+        file:           src
+        outFile:        dest
+        outputStyle:    'nested'
+        precision:      10
+        sourceComments: false
+        sourceMap:      false
+        includePaths:   loadPaths
+        indentType:     'space'
+        indentWidth:    2
+      }, (err, result) =>
+        if err
+          console.log err, result
+        else
+          d.resolve()
+      )
 
       d.promise
+
+    # sass.render({
+    #   file: scss_filename,
+    #   [, options..]
+    # }, function(err, result) { /*...*/ });
+
+    # file
+    # outFile
+    # outputStyle # nested, expanded, compact, compressed
+    # precision # 5
+    # sourceComments: # false
+    # sourceMap: # false
+
+
+    # _.map fileMappings, (fileMapping) =>
+    #   d     = Q.defer()
+    #   src   = fileMapping.src().absolutePath()
+    #   dest  = fileMapping.dest().absolutePath()
+    #   a     = ["exec", "sass"].concat(args)
+    #   a     = a.concat(["#{src}:#{dest}"])
+
+    #   @naspi.exec.exec d, 'bundle', a, {}
+
+    #   d.promise
 
   _ensureFolders: (fileMappings, options) =>
     @naspi.file.mkdir(options.cacheLocation)
