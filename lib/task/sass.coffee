@@ -89,7 +89,7 @@ module.exports = class Sass extends Abstract
       sass.render({
         file:           src
         outFile:        dest
-        outputStyle:    'nested'
+        outputStyle:    'expanded'
         precision:      10
         sourceComments: false
         sourceMap:      false
@@ -100,6 +100,7 @@ module.exports = class Sass extends Abstract
         if err
           console.log err, result
         else
+          @naspi.file.write(dest, result.css)
           d.resolve()
       )
 
