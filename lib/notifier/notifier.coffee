@@ -9,6 +9,8 @@ module.exports = class Notifier
     # @naspi.option('notify') == true
 
   notify: (options = {}) =>
+    return if @naspi.option('notify') == false
+
     options = _.defaults options, {
       title: 'naspi'
       message: ''
