@@ -83,37 +83,9 @@ module.exports = class PackageRunner
   notifyChanges: (env) =>
     runPkg = env.runPkg
 
-    # options =
-    #   title: 'naspi processed'
-    #   message: [runPkg.pkg, runPkg.task, runPkg.env].join(':')
-    #   duration: 1
-
     @naspi.notifier.notify
       title: 'naspi processed'
       message: [runPkg.pkg, runPkg.task, runPkg.env].join(':')
-
-    # nf = new NotificationCenter()
-    # nf.notify
-    #   title:    'naspi processed'
-    #   message:  [runPkg.pkg, runPkg.task, runPkg.env].join(':')
-    #   group:    'naspi'
-    #   wait: false
-    # setTimeout =>
-    #   console.log 'REMOVE'
-    #   nf.notify { remove: 'naspi' }
-    # , 1000
-
-    # notifier.notify
-    #   title:    'naspi processed'
-    #   message:  [runPkg.pkg, runPkg.task, runPkg.env].join(':')
-    #   group:    'naspi'
-    #   wait: false
-
-    # setTimeout =>
-    #   console.log 'REMOVE'
-    #   notifier.notify { remove: 'naspi' }
-    # , 1000
-
 
     env
 
