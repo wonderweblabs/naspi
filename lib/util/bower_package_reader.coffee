@@ -65,7 +65,7 @@ module.exports = class BowerPackageReader
       @resolveWithBowerData(data)
     else
       @naspi.verbose.writeError "error\n"
-      @naspi.verbose.writelnWarn "Package class file \"#{type}\" not found."
+      @naspi.logger.fatal "Package class file \"#{type}\" not found."
 
     pkg
 
