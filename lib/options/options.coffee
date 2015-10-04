@@ -75,8 +75,8 @@ module.exports = class Options
 
     @_parseConfigFile()
     @_parseUserConfigFile()
-    @_parseProcessArguments()
     @_mergeConfigs()
+    @_parseProcessArguments()
     @_normalizeRunPkgs()
 
   option: (key, env = @environment) =>
@@ -97,8 +97,9 @@ module.exports = class Options
   _parseProcessArgument: (argument) =>
     if /^\-\-/.test(argument)
       opt = argument.replace(/^\-\-/, '').split('=')
-      @options[@environment] or= {}
-      @options[@environment][opt[0]] = if _.size(opt) > 1 then opt[1] else true
+      _.each Object.keys(@options), (env_name) =>
+        @options[env_name] or= {}
+        @options[env_name][opt[0]] = if _.size(opt) > 1 then opt[1] else true
     else
       opt       = argument.split(':')
       opts      = { pkg: opt[0] }

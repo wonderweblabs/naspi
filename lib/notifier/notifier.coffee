@@ -6,7 +6,6 @@ child_process = require 'child_process'
 module.exports = class Notifier
 
   constructor: (@naspi) ->
-    # @naspi.option('notify') == true
 
   notify: (options = {}) =>
     return if @naspi.option('notify') == false
