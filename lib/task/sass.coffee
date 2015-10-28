@@ -106,30 +106,6 @@ module.exports = class Sass extends Abstract
 
       d.promise
 
-    # sass.render({
-    #   file: scss_filename,
-    #   [, options..]
-    # }, function(err, result) { /*...*/ });
-
-    # file
-    # outFile
-    # outputStyle # nested, expanded, compact, compressed
-    # precision # 5
-    # sourceComments: # false
-    # sourceMap: # false
-
-
-    # _.map fileMappings, (fileMapping) =>
-    #   d     = Q.defer()
-    #   src   = fileMapping.src().absolutePath()
-    #   dest  = fileMapping.dest().absolutePath()
-    #   a     = ["exec", "sass"].concat(args)
-    #   a     = a.concat(["#{src}:#{dest}"])
-
-    #   @naspi.exec.exec d, 'bundle', a, {}
-
-    #   d.promise
-
   _ensureFolders: (fileMappings, options) =>
     @naspi.file.mkdir(options.cacheLocation)
     _.each fileMappings, (fileMapping) =>

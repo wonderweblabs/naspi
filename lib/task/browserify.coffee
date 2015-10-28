@@ -103,7 +103,7 @@ module.exports = class Browserify extends Abstract
     b.exclude(options.exclude) if _.any(options.exclude)
 
     # coffee
-    b.transform('coffeeify') if options.coffeeify == true
+    b.transform('./node_modules/naspi/node_modules/coffeeify') if options.coffeeify == true
 
     # build and write
     b.bundle().pipe(fs.createWriteStream(output, 'utf8')).on 'close', =>
