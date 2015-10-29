@@ -38,17 +38,19 @@ options:
 ###
 module.exports = class Sass extends Abstract
 
-  onRun: (deferred, options = {}) =>
-    options.options = _.defaults (options.options || {}), @getDefaultOptions()
-    files           = @filesExpanded(options)
-    args            = @prepareArguments(options.options)
+  onRun: (deferred, fileMappingList, options = {}) =>
+    options       = _.defaults (options || {}), @getDefaultOptions()
+    fileMappings  = fileMappingList.resolve()
+    args          = @prepareArguments(options)
 
-    @_ensureFolders(files, options)
+    @_ensureFolders(fileMappings, options)
 
-    Q.all(@_execFiles(files, args, options)).done(=> deferred.resolve())
+    Q.all(@_execFiles(fileMappings, args, options))
+    .fail((e) => @_failPromise(deferred, e))
+    .done => deferred.resolve()
 
   getDefaultOptions: =>
-    cacheLocation: @naspi.options.sassCache
+    cacheLocation: @naspi.option('sassCache')
     style: 'expanded'
     update: true
     sourcemap: 'auto'
@@ -59,7 +61,7 @@ module.exports = class Sass extends Abstract
     quiet: true
 
   prepareArguments: (opts = {}) =>
-    args = []
+    args = ["--stop-on-error"]
 
     _.each (opts.loadPaths || []), (loadPath) => @_addArgs(args, "--load-path", "#{loadPath}")
     @_addArgs args, "--cache-location", opts.cacheLocation
@@ -74,19 +76,40 @@ module.exports = class Sass extends Abstract
 
     args
 
-  _execFiles: (files, args, options) =>
-    _.map files, (file) =>
-      d     = Q.defer()
-      src   = file.src[0]
-      dest  = file.dest.replace(/\.(sass|scss)$/, '.css')
+  _execFiles: (fileMappings, args, options) =>
+    sass = require 'node-sass'
 
-      @naspi.exec.exec 'sass', args.concat(["#{src}:#{dest}"]), {}, => d.resolve()
+    loadPaths = options.loadPaths || []
+
+    _.map fileMappings, (fileMapping) =>
+      d     = Q.defer()
+      src   = fileMapping.src().absolutePath()
+      dest  = fileMapping.dest().absolutePath()
+
+      sass.render({
+        file:           src
+        outFile:        dest
+        outputStyle:    'expanded'
+        precision:      10
+        sourceComments: false
+        sourceMap:      false
+        includePaths:   loadPaths
+        indentType:     'space'
+        indentWidth:    2
+      }, (err, result) =>
+        if err
+          console.log err, result
+        else
+          @naspi.file.write(dest, result.css)
+          d.resolve()
+      )
 
       d.promise
 
-  _ensureFolders: (files, options) =>
-    @naspi.file.mkdir(options.options.cacheLocation)
-    _.each files, (file) => @naspi.file.mkdir(path.dirname(file.dest))
+  _ensureFolders: (fileMappings, options) =>
+    @naspi.file.mkdir(options.cacheLocation)
+    _.each fileMappings, (fileMapping) =>
+      @naspi.file.mkdir(fileMapping.dest().absoluteDirname())
 
   _addArgs: (args, newArgs...) =>
     _.each (newArgs || []), (arg) => args.push(arg)

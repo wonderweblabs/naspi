@@ -29,14 +29,14 @@ module.exports = class AbstractLogger
   fatal: (msg...) ->
     @_writeln([''])
     @_writeln([''])
-    @_writelnEach([msg], 'red')
+    @_writelnEach(msg, 'red')
     @_writelnEach(['Naspi fatal - interrupt process'], 'red')
     @naspi.exit(129)
 
   throwError: (msg, origError) ->
     @_writeln([''])
     @_writeln([''])
-    @_writelnEach([msg], 'red')
+    @_writelnEach(msg, 'red')
     @_writelnEach(['Naspi fatal - interrupt process'], 'red')
     @_writeln([''])
     @_writelnEach([(origError.stack || '')], 'red')

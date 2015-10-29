@@ -30,21 +30,34 @@
     "url": "https://github.com/wonderweblabs/naspi.git"
   },
   "dependencies": {
+    "browserify": "^11.2.0",
+    "browserify-shim": "^3.8.10",
+    "browserify-incremental": "^3.0.1",
     "coffee-script": "~1.9.3",
+    "coffeeify": "^1.1.0",
     "colors": "^1.1.2",
+    "convert-source-map": "~1.1.1",
     "exit": "~0.1.2",
     "findup-sync": "~0.2.1",
+    "gaze": "~0.5.1",
     "glob": "~5.0.14",
-    "haml-coffee": "^1.14.1",
     "iconv-lite": "~0.4.11",
     "js-yaml": "~3.4.0",
     "lodash": "~3.10.1",
     "minimatch": "~2.0.10",
+    "node-sass": "~3.3.2",
     "nopt": "~3.0.3",
     "q": "^1.4.1",
     "resolve": "~1.1.6",
     "rimraf": "~2.4.3",
-    "source-map": "^0.4.4"
+    "source-map": ">=0.5.0",
+    "strip-json-comments": ">=1.0.4",
+    "vulcanize": "^1.10.4",
+    "xtend": "^4.0.0"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "coffee-script": "~1.9.3",
+    "lodash": "~3.10.1",
+    "q": "^1.4.1"
+  }
 }

@@ -259,7 +259,9 @@ module.exports = class File
       @naspi.verbose.writeOk('ok\n')
       return contents
     catch e
-      @throwError "Unable to read \"#{filepath}\" file (Error code: #{e.code}).", e
+      err = new Error("Unable to read \"#{filepath}\" file (Error code: #{e.code}).")
+      err.origError = e
+      throw err
 
   ###
   Read a file, parse its contents, return an object.
@@ -273,8 +275,9 @@ module.exports = class File
       @naspi.verbose.writeOk('ok\n')
       return result
     catch e
-      @verboseError()
-      @throwError "Unable to parse \"#{filepath}\" file (#{e.message}).", e
+      err = new Error("Unable to parse \"#{filepath}\" file (#{e.message}).")
+      err.origError = e
+      throw err
 
   ###
   Read a YAML file, parse its contents, return an object.
@@ -318,7 +321,7 @@ module.exports = class File
   ###
   writeJSON
   ###
-  writeJSON: (filepath, json, options) =>
+  writeJSON: (filepath, json, options = {}) =>
     spaces  = if options.prettyPrint == true then 4 else 0
     json    = JSON.stringify((json || {}), null, spaces)
 

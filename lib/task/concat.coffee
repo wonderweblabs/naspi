@@ -16,27 +16,34 @@ options:
 ###
 module.exports = class Concat extends Abstract
 
-  onRun: (deferred, options = {}) =>
-    options.options = _.defaults (options.options || {}), @getDefaultOptions()
+  onRun: (deferred, fileMappingList, options = {}) =>
+    options     = _.defaults (options || {}), @getDefaultOptions()
+    fileMappings = fileMappingList.resolve()
 
-    # load files
-    opts        = {}
-    opts.cwd    = options.cwd if _.isString(options.cwd) && !_.isEmpty(options.cwd)
-    opts.filter = options.filter if _.isFunction(options.filter)
-    files       = @naspi.file.expand(opts, options.files)
+    @_ensureFolders(fileMappings, options)
 
-    @_ensureFolders(files, options)
+    destMapping = {}
+    _.each fileMappings, (fileMapping) =>
+      destMapping[fileMapping.dest().path()] or= []
+      destMapping[fileMapping.dest().path()].push fileMapping
 
-    # iterate to final source
-    src = _.map(files, (file) => @naspi.file.read(path.join((options.cwd || ''), file)) ).join('\n')
+    _.each destMapping, (fileMappings, destFile) =>
+      @naspi.file.mkdir(path.dirname(destFile))
 
-    # Write
-    @naspi.file.write(options.destFile, src)
-    @naspi.verbose.writeln "File \"#{options.destFile}\" created."
+      # iterate to final source
+      src = _.map(fileMappings, (fileMapping) =>
+        @naspi.file.read(fileMapping.src().absolutePath()) ).join('\n')
+
+      # Write
+      @naspi.file.write(destFile, src)
+      @naspi.verbose.writeln "File \"#{destFile}\" created."
+
     deferred.resolve()
 
   getDefaultOptions: ->
     {}
 
-  _ensureFolders: (files, options) =>
-    @naspi.file.mkdir(path.dirname(options.destFile))
+  _ensureFolders: (fileMappings, options) =>
+    _.each fileMappings, (fileMapping) =>
+      @naspi.file.mkdir(fileMapping.dest().absoluteDirname())
+

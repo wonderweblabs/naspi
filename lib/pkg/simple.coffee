@@ -5,45 +5,111 @@ AbstractBuild = require './abstract_build'
 
 module.exports = class Simple extends AbstractBuild
 
-  onProcess: (options = {}) =>
-    deferred = Q.defer()
+  onProcess: =>
+    chain = @buildRunChain()
+    chain.addStep @runTaskCopy
+    chain.addStep @runTaskSass
+    chain.addStep @runTaskCoffee
+    chain.addStep @runTaskHaml
+    chain.process() # returns promise
 
-    Q.fcall(@runTaskCopy, options)
-    .then(@runTaskSass, options)
-    .then(@runTaskCoffee, options)
-    .then(@runTaskHaml, options)
-    .done => deferred.resolve()
+  runTaskCopy: =>
+    @runTask 'copy', @_taskCopyFilesConfig()
 
-    deferred.promise
+  runTaskSass: =>
+    @runTask 'sass', @_taskSassFilesConfig(),
+      loadPaths: (@naspi.option('sassLoadPaths') || [])
+      sourcemap: 'none'
 
-  runTaskCopy: (options = {}) =>
-    @getTask('copy').run
-      files:  '**/*'
-      cwd:    @basePath
-      dest:   path.join(@naspi.options.buildPath, 'bower_components', @getName())
-      filter: (file) =>
-        return false if /bower\.json$/.test(file)
-        return false if /\.(coffee|sass|scss|haml)$/.test(file)
-        return false unless @naspi.file.isFile(file)
-        true
+  runTaskCoffee: =>
+    @runTask 'coffee', @_taskCoffeeFilesConfig(),
+      sourcemap: false
 
-  runTaskSass: (options = {}) =>
-    @getTask('sass').run
-      files:  '**/*.{sass,scss}'
-      cwd:    @basePath
-      dest:   path.join(@naspi.options.buildPath, 'bower_components', @getName())
+  runTaskHaml: =>
+    @runTask 'haml', @_taskHamlFilesConfig(),
+      render: true
+      hyphenateDataAttrs: true
 
-  runTaskCoffee: (options = {}) =>
-    @getTask('coffee').run
-      files:  '**/*.coffee'
-      cwd:    @basePath
-      dest:   path.join(@naspi.options.buildPath, 'bower_components', @getName())
+  getDestPath: =>
+    path.join(@naspi.option('buildPath'), 'bower_components', @getName())
 
-  runTaskHaml: (options = {}) =>
-    @getTask('haml').run
-      files:  '**/*.haml'
-      cwd:    @basePath
-      dest:   path.join(@naspi.options.buildPath, 'bower_components', @getName())
-      options:
-        render: true
-        hyphenateDataAttrs: true
+
+  # ----------------------------------------------------------
+  # private - files
+
+  # @nodoc
+  _taskCopyFilesConfig: =>
+    expand:     true
+    src:        '**/*'
+    cwd:        @basePath
+    dest:       @getDestPath()
+    eachFilter: @_taskCopyEachFilter
+
+  # @nodoc
+  _taskSassFilesConfig: =>
+    expand:     true
+    src:        '**/*.{sass,scss}'
+    cwd:        @basePath
+    dest:       @getDestPath()
+    ext:        'css'
+    eachFilter: @_taskSassEachFilter
+
+  # @nodoc
+  _taskCoffeeFilesConfig: =>
+    expand:     true
+    src:        '**/*.coffee'
+    cwd:        @basePath
+    dest:       @getDestPath()
+    ext:        'js'
+    eachFilter: @_taskCoffeeEachFilter
+
+  # @nodoc
+  _taskHamlFilesConfig: =>
+    expand:     true
+    src:        '**/*.haml'
+    cwd:        @basePath
+    dest:       @getDestPath()
+    ext:        'html'
+    eachFilter: @_taskHamlEachFilter
+
+
+  # ----------------------------------------------------------
+  # private - filter
+
+  # @nodoc
+  _taskCopyEachFilter: (fileMapping) =>
+    return false if /bower\.json$/.test(fileMapping.src().path())
+    return false if /\.(coffee|sass|scss|haml)$/.test(fileMapping.src().path())
+    return false if !fileMapping.src().isFile()
+
+    if !fileMapping.dest().exists() || fileMapping.src().hasChanged("simple-copy-#{@getName()}")
+      fileMapping.src().updateChangedState("simple-copy-#{@getName()}")
+      true
+    else
+      false
+
+  # @nodoc
+  _taskSassEachFilter: (fileMapping) =>
+    if !fileMapping.dest().exists() || fileMapping.src().hasChanged("simple-sass-#{@getName()}")
+      fileMapping.src().updateChangedState("simple-sass-#{@getName()}")
+      true
+    else
+      false
+
+  # @nodoc
+  _taskCoffeeEachFilter: (fileMapping) =>
+    if !fileMapping.dest().exists() || fileMapping.src().hasChanged("simple-coffee-#{@getName()}")
+      fileMapping.src().updateChangedState("simple-coffee-#{@getName()}")
+      true
+    else
+      false
+
+  # @nodoc
+  _taskHamlEachFilter: (fileMapping) =>
+    if !fileMapping.dest().exists() || fileMapping.src().hasChanged("simple-haml-#{@getName()}")
+      fileMapping.src().updateChangedState("simple-haml-#{@getName()}")
+      true
+    else
+      false
+
+

@@ -2,6 +2,7 @@ _         = require 'lodash'
 path      = require 'path'
 Q         = require 'q'
 Abstract  = require './abstract'
+FileMappingList = require '../file/file_mapping_list'
 
 module.exports = class AbstractBuild extends Abstract
 
@@ -15,14 +16,18 @@ module.exports = class AbstractBuild extends Abstract
     @basePath = @version
     @config   = @data.naspi || {}
 
-  onPrepare: (options = {}) =>
-    deferred = Q.defer()
+  onPrepare: =>
+    chain = @buildRunChain()
+    chain.addStep @registerForBuild
+    chain.addStep @copyBowerFile
+    chain.process() # returns promise
 
-    Q.fcall(@registerForBuild)
-    .then(@copyBowerFile)
-    .done => deferred.resolve()
-
-    deferred.promise
+  runTask: (taskName, fileMappingListConfig, options = {}) =>
+    @getTask(taskName).run(
+      @env,
+      new FileMappingList(@naspi, fileMappingListConfig),
+      options
+    )
 
   getTask: (taskName) ->
     try
@@ -30,12 +35,13 @@ module.exports = class AbstractBuild extends Abstract
       new TaskName(@naspi, @)
     catch e
       @naspi.logger.throwError(e.message, e)
-      Q.reject(e.message)
+      TaskName = @getTaskClass('reject')
+      new TaskName(@naspi, @, e)
 
   getTaskClass: (taskName) ->
     requirePath = null
 
-    _.each @naspi.options.taskClassPaths, (file) =>
+    _.each @naspi.option('taskClassPaths'), (file) =>
       return unless @naspi.file.isFile(path.join(file, "#{taskName}.coffee"))
       requirePath = path.join(file, taskName)
 
@@ -50,7 +56,7 @@ module.exports = class AbstractBuild extends Abstract
   registerForBuild: =>
     folder = path.join('bower_components', @getName())
     @naspi.file.bowerBuildFile.registerPackage(@getName(), "./#{folder}")
-    Q()
+    Q.resolve()
 
   copyBowerFile: =>
     pkgBowerFile  = path.join('./', @basePath, 'bower.json')
@@ -61,9 +67,9 @@ module.exports = class AbstractBuild extends Abstract
       newVersion = path.join('bower_components', name)
       bowerData.dependencies[name] = "./#{newVersion}"
 
-    resultBowerPath = path.join('./', @naspi.options.buildPath, 'bower_components', @getName())
+    resultBowerPath = path.join('./', @naspi.option('buildPath'), 'bower_components', @getName())
     resultBowerFile = path.join('./', resultBowerPath, 'bower.json')
     @naspi.file.mkdir(resultBowerPath)
     @naspi.file.writeJSON(resultBowerFile, bowerData, { prettyPrint: true })
 
-    Q()
+    Q.resolve()

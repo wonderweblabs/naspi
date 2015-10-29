@@ -40,9 +40,9 @@ if ('completion' in options) {
 }
 
 try {
-  naspiPath = resolve('naspi_loader', { basedir: basedir });
+  naspiPath = resolve('node_modules/naspi/lib/naspi_loader', { basedir: basedir });
 } catch (ex) {
-  naspiPath = findup('lib/naspi_loader.js');
+  naspiPath = findup('node_modules/naspi/lib/naspi_loader.js');
   // No naspi install found!
   if (!naspiPath) {
     if (options.version) { process.exit(); }

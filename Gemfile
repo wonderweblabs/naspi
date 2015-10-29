@@ -11,3 +11,8 @@ source 'https://rubygems.org'
 # your gem to rubygems.org.
 
 gem 'sass'
+gem 'haml'
+
+group :development do
+  gem 'terminal-notifier'
+end

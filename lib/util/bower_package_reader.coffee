@@ -47,14 +47,14 @@ module.exports = class BowerPackageReader
   _buildLocalPackage: (name, version) =>
     data        = @naspi.file.readJSON(File.join(version, 'bower.json'))
     naspiConfig = data.naspi || {}
-    type        = naspiConfig.type || ''
+    type        = naspiConfig.type || 'simple'
     requirePath = null
 
     @naspi.verbose.write "Pkg \"#{name}\" - create instance ... "
 
-    _.each @naspi.options.pkgClassPaths, (path) =>
-      return unless @naspi.file.isFile(File.join(path, "#{naspiConfig.type}.coffee"))
-      requirePath = File.join(path, naspiConfig.type)
+    _.each @naspi.option('pkgClassPaths'), (path) =>
+      return unless @naspi.file.isFile(File.join(path, "#{type}.coffee"))
+      requirePath = File.join(path, type)
 
     if @naspi.file.exists("#{requirePath}.coffee")
       pkg = new (require(requirePath))(@naspi, name, version, data)
@@ -65,7 +65,7 @@ module.exports = class BowerPackageReader
       @resolveWithBowerData(data)
     else
       @naspi.verbose.writeError "error\n"
-      @naspi.verbose.writelnWarn "Package class file \"#{naspiConfig.type}\" not found."
+      @naspi.logger.fatal "Package class file \"#{type}\" not found."
 
     pkg
 

@@ -14,10 +14,10 @@ module.exports = class BowerBuildFile
     @getJson().dependencies[name] = version
 
   getBowerFilePath: ->
-    path.join(@naspi.options.buildPath, 'bower.json')
+    path.join(@naspi.option('buildPath'), 'bower.json')
 
   getJson: ->
-    @json or= @file.readJSON(@getBowerFilePath())
+    @json or= @_readJsonFile()
 
   write: ->
     @file.writeJSON(@getBowerFilePath(), @getJson(), { prettyPrint: true })
@@ -29,3 +29,10 @@ module.exports = class BowerBuildFile
     @getJson().dependencies or= {}
     @getJson().private      = true
 
+  _readJsonFile: ->
+    if @file.exists(@getBowerFilePath())
+      @file.readJSON(@getBowerFilePath())
+    else
+      @file.mkdir @naspi.option('buildPath')
+      @file.writeJSON(@getBowerFilePath(), {})
+      {}
