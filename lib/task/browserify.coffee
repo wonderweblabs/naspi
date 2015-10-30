@@ -18,11 +18,17 @@ options:
     * cacheFile: string - default: '#{tmpPath}/browserify-cache.json' - for browserify-incremental
     * sourceMap: true|false - default: false
     * debug:     true|false - default: sourceMap
+    * paths:     [string] - look up paths
 
 ###
 module.exports = class Browserify extends Abstract
 
   onRun: (deferred, fileMappingList, options = {}) =>
+    if _.isArray(options.paths) && _.any(options.paths)
+      options.paths = @getDefaultOptions().paths.concat(options.paths)
+    else
+      delete options.paths
+
     options       = _.defaults options, @getDefaultOptions()
     fileMappings  = fileMappingList.resolve()
 
@@ -42,6 +48,10 @@ module.exports = class Browserify extends Abstract
     sourceMap: false
     fullPaths: false
     debug: false
+    paths: [
+      'node_modules',
+      path.join(__dirname, '../..', 'node_modules')
+    ]
 
 
   # ----------------------------------------------------------
@@ -77,18 +87,20 @@ module.exports = class Browserify extends Abstract
   _runBrowserify: (deferred, src, output, options) =>
     options.extensions.push('.coffee') if options.coffeeify == true
 
+    opts            = {}
+    opts.debug      = options.sourceMap
+    opts.extensions = options.extensions
+    opts.paths      = options.paths
+
+    if _.isString(options.basedir) && !_.isEmpty(options.basedir)
+      opts.basedir    = options.basedir
+
     if options.debug == true || options.sourceMap == true
-      b = browserifyInc src, {
-          cacheFile:  options.cacheFile
-          debug:      options.sourceMap
-          extensions: options.extensions
-        }
+      opts.cacheFile = options.cacheFile
     else
-      b = browserify src, {
-          debug:      options.sourceMap
-          extensions: options.extensions
-          fullPaths:  false
-        }
+      opts.fullPaths = false
+
+    b = browserifyInc src, opts
 
     # option - external
     options.external = [options.external] unless _.isArray(options.external)

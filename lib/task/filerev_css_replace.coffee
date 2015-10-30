@@ -77,14 +77,3 @@ module.exports = class FilerevCssReplace extends Abstract
     @_manifest or= {}
     @_manifest
 
-
-    # if _.isString(@naspi.option('assetHost', env.runPkg.env))
-    #   host = @naspi.option('assetHost', env.runPkg.env)
-    #   host = host.replace(/\/$/, '')
-
-    #   patterns.push
-    #     pattern: /(?:url\([\'\"]?)(?![\/])(?!(http|https)\:\/\/)([^\'\"\(\)]*)(?:[\'\"]?\))/g
-    #     replacement: "url('#{host}/$2')"
-
-
-

@@ -67,8 +67,9 @@ module.exports = class Coffee extends Abstract
     deferred  = Q.defer()
     src       = fileMapping.src().absolutePath()
     a         = args.concat([src])
+    cmd       = path.join(__dirname, '../../node_modules/coffee-script/bin/coffee')
 
-    @naspi.exec.exec(deferred, 'coffee', a, { pipeOutput: true })
+    @naspi.exec.exec(deferred, cmd, a, { pipeOutput: true })
 
     deferred.promise
 
