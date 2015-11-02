@@ -90,11 +90,14 @@ module.exports = class Simple extends AbstractBuild
 
   # @nodoc
   _taskSassEachFilter: (fileMapping) =>
-    if !fileMapping.dest().exists() || fileMapping.src().hasChanged("simple-sass-#{@getName()}")
-      fileMapping.src().updateChangedState("simple-sass-#{@getName()}")
-      true
-    else
-      false
+    if /^_/.test(fileMapping.src().basename()) then false else true
+    # return false if /^_/.test(fileMapping.src().basename())
+
+    # if !fileMapping.dest().exists() || fileMapping.src().hasChanged("simple-sass-#{@getName()}")
+    #   fileMapping.src().updateChangedState("simple-sass-#{@getName()}")
+    #   true
+    # else
+    #   false
 
   # @nodoc
   _taskCoffeeEachFilter: (fileMapping) =>
