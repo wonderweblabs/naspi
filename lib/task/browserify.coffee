@@ -97,8 +97,8 @@ module.exports = class Browserify extends Abstract
 
     if options.debug == true || options.sourceMap == true
       opts.cacheFile = options.cacheFile
-    else
-      opts.fullPaths = false
+    # else
+    #   opts.fullPaths = false
 
     b = browserifyInc src, opts
 
