@@ -15,6 +15,7 @@ options:
     * ignore:   [...] as string|array: https://github.com/substack/node-browserify#bignorefile
     * exclude:  [...] as string|array: https://github.com/substack/node-browserify#bexcludefile
     * coffeeify: true|false - default: true
+    * hamlify:   true|false - default: false - make it possible to require ruby haml files
     * cacheFile: string - default: '#{tmpPath}/browserify-cache.json' - for browserify-incremental
     * sourceMap: true|false - default: false
     * debug:     true|false - default: sourceMap
@@ -40,6 +41,7 @@ module.exports = class Browserify extends Abstract
 
   getDefaultOptions: =>
     coffeeify: true
+    hamlify:   false
     external: []
     ignore:   []
     exclude:  []
@@ -116,6 +118,7 @@ module.exports = class Browserify extends Abstract
 
     # coffee
     b.transform('./node_modules/naspi/node_modules/coffeeify') if options.coffeeify == true
+    b.transform('./node_modules/naspi/node_modules/browserify-haml-ruby') if options.hamlify == true
 
     # build and write
     b.bundle().pipe(fs.createWriteStream(output, 'utf8')).on 'close', =>

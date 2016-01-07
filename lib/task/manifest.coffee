@@ -52,7 +52,7 @@ module.exports = class Filerev extends Abstract
       return memo if _.isEmpty(destPath)
 
       srcPath       = srcPath.replace(/^(\/)/, '')
-      memo[srcPath] = destPath
+      memo[srcPath] = path.join('/', destPath)
       memo
 
   updateManifest: (mapping) =>

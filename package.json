@@ -31,8 +31,9 @@
   },
   "dependencies": {
     "browserify": "^11.2.0",
-    "browserify-shim": "^3.8.10",
+    "browserify-haml-ruby": "^0.1.4",
     "browserify-incremental": "^3.0.1",
+    "browserify-shim": "^3.8.10",
     "coffee-script": "~1.9.3",
     "coffeeify": "^1.1.0",
     "colors": "^1.1.2",
