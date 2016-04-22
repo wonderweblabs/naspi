@@ -34,7 +34,7 @@
     "browserify-haml-ruby": "^0.1.4",
     "browserify-incremental": "^3.0.1",
     "browserify-shim": "^3.8.10",
-    "coffee-script": "~1.9.3",
+    "coffee-script": "~1.10.0",
     "coffeeify": "^1.1.0",
     "colors": "^1.1.2",
     "convert-source-map": "~1.1.1",
@@ -57,7 +57,6 @@
     "xtend": "^4.0.0"
   },
   "devDependencies": {
-    "coffee-script": "~1.9.3",
     "lodash": "~3.10.1",
     "q": "^1.4.1"
   }
